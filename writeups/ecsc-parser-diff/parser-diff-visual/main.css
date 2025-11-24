@@ -1,16 +1,13 @@
-/*! tailwindcss v4.1.17 | MIT License | https://tailwindcss.com */
+/*! tailwindcss v4.1.14 | MIT License | https://tailwindcss.com */
 @layer properties;
 @layer theme, base, components, utilities;
 @layer theme {
   :root, :host {
-    --font-sans: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-    'Noto Color Emoji';
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-    monospace;
+    --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+      "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+      "Courier New", monospace;
     --spacing: 0.25rem;
-    --text-sm: 0.875rem;
-    --text-lg: 1.125rem;
-    --text-lg--line-height: calc(1.75 / 1.125);
     --default-font-family: var(--font-sans);
     --default-mono-font-family: var(--font-mono);
     --font-jetbrains: "JetBrains Mono";
@@ -25,17 +22,20 @@
     --color-blue: #83A598;
     --color-pink: #D3869B;
     --color-link: #83A598;
-    --text-custom-dynamic: clamp(0.6rem, calc(1.5vw), 1rem);
-    --text-ascii-art: calc(0.8vw + 0.8vw);
-    --text-ascii-art--line-height: calc(0.8vw + 0.8vw);
   }
 }
 @layer base {
+  *, ::after, ::before, ::backdrop, ::file-selector-button {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: 0 solid;
+  }
   html, :host {
     line-height: 1.5;
     -webkit-text-size-adjust: 100%;
     tab-size: 4;
-    font-family: var(--default-font-family, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji');
+    font-family: var(--default-font-family, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji");
     font-feature-settings: var(--default-font-feature-settings, normal);
     font-variation-settings: var(--default-font-variation-settings, normal);
     -webkit-tap-highlight-color: transparent;
@@ -49,11 +49,20 @@
     -webkit-text-decoration: underline dotted;
     text-decoration: underline dotted;
   }
+  h1, h2, h3, h4, h5, h6 {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+  a {
+    color: inherit;
+    -webkit-text-decoration: inherit;
+    text-decoration: inherit;
+  }
   b, strong {
     font-weight: bolder;
   }
   code, kbd, samp, pre {
-    font-family: var(--default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace);
+    font-family: var(--default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
     font-feature-settings: var(--default-mono-font-feature-settings, normal);
     font-variation-settings: var(--default-mono-font-variation-settings, normal);
     font-size: 1em;
@@ -86,6 +95,9 @@
   }
   summary {
     display: list-item;
+  }
+  ol, ul, menu {
+    list-style: none;
   }
   img, svg, video, canvas, audio, iframe, embed, object {
     display: block;
@@ -150,43 +162,19 @@
   :-moz-ui-invalid {
     box-shadow: none;
   }
-  button, input:where([type='button'], [type='reset'], [type='submit']), ::file-selector-button {
+  button, input:where([type="button"], [type="reset"], [type="submit"]), ::file-selector-button {
     appearance: button;
   }
   ::-webkit-inner-spin-button, ::-webkit-outer-spin-button {
     height: auto;
   }
-  [hidden]:where(:not([hidden='until-found'])) {
+  [hidden]:where(:not([hidden="until-found"])) {
     display: none !important;
   }
 }
 @layer utilities {
-  .container {
-    width: 100%;
-    @media (width >= 40rem) {
-      max-width: 40rem;
-    }
-    @media (width >= 48rem) {
-      max-width: 48rem;
-    }
-    @media (width >= 64rem) {
-      max-width: 64rem;
-    }
-    @media (width >= 80rem) {
-      max-width: 80rem;
-    }
-    @media (width >= 96rem) {
-      max-width: 96rem;
-    }
-  }
   .m-10 {
     margin: calc(var(--spacing) * 10);
-  }
-  .my-20 {
-    margin-block: calc(var(--spacing) * 20);
-  }
-  .my-\[2\.5vh\] {
-    margin-block: 2.5vh;
   }
   .mt-1 {
     margin-top: calc(var(--spacing) * 1);
@@ -197,71 +185,23 @@
   .mt-5 {
     margin-top: calc(var(--spacing) * 5);
   }
-  .mb-\[1\.5vh\] {
-    margin-bottom: 1.5vh;
-  }
-  .box-border {
-    box-sizing: border-box;
-  }
   .flex {
     display: flex;
   }
   .grid {
     display: grid;
   }
-  .table {
-    display: table;
-  }
-  .h-\[90vh\] {
-    height: 90vh;
-  }
   .h-dvh {
     height: 100dvh;
-  }
-  .h-max {
-    height: max-content;
   }
   .min-h-25 {
     min-height: calc(var(--spacing) * 25);
   }
-  .min-h-dvh {
-    min-height: 100dvh;
-  }
-  .w-\[90vw\] {
-    width: 90vw;
-  }
-  .w-\[95vw\] {
-    width: 95vw;
-  }
   .w-full {
     width: 100%;
   }
-  .w-max {
-    width: max-content;
-  }
-  .w-screen {
-    width: 100vw;
-  }
-  .max-w-95\/100 {
-    max-width: calc(95/100 * 100%);
-  }
-  .max-w-screen {
-    max-width: 100vw;
-  }
-  .border-collapse {
-    border-collapse: collapse;
-  }
   .cursor-default {
     cursor: default;
-  }
-  .resize {
-    resize: both;
-  }
-  .list-inside {
-    list-style-position: inside;
-  }
-  .list-disc {
-    list-style-type: disc;
   }
   .grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -277,9 +217,6 @@
   }
   .place-content-start {
     place-content: start;
-  }
-  .place-items-center {
-    place-items: center;
   }
   .gap-x-0 {
     column-gap: calc(var(--spacing) * 0);
@@ -309,13 +246,6 @@
   .self-center {
     align-self: center;
   }
-  .overflow-x-auto {
-    overflow-x: auto;
-  }
-  .border {
-    border-style: var(--tw-border-style);
-    border-width: 1px;
-  }
   .border-1 {
     border-style: var(--tw-border-style);
     border-width: 1px;
@@ -344,12 +274,6 @@
   .px-1 {
     padding-inline: calc(var(--spacing) * 1);
   }
-  .px-5 {
-    padding-inline: calc(var(--spacing) * 5);
-  }
-  .py-8 {
-    padding-block: calc(var(--spacing) * 8);
-  }
   .pr-10 {
     padding-right: calc(var(--spacing) * 10);
   }
@@ -361,17 +285,6 @@
   }
   .font-jetbrains {
     font-family: var(--font-jetbrains);
-  }
-  .text-ascii-art {
-    font-size: var(--text-ascii-art);
-    line-height: var(--tw-leading, var(--text-ascii-art--line-height));
-  }
-  .text-lg {
-    font-size: var(--text-lg);
-    line-height: var(--tw-leading, var(--text-lg--line-height));
-  }
-  .text-custom-dynamic {
-    font-size: var(--text-custom-dynamic);
   }
   .text-\(--color-blue\) {
     color: var(--color-blue);
@@ -394,71 +307,12 @@
   .text-\(--color-red\) {
     color: var(--color-red);
   }
-  .lowercase {
-    text-transform: lowercase;
-  }
-  .italic {
-    font-style: italic;
-  }
-  .underline {
-    text-decoration-line: underline;
-  }
-  .outline {
-    outline-style: var(--tw-outline-style);
-    outline-width: 1px;
-  }
   .hover\:border-\(--color-primarygreen\) {
     &:hover {
       @media (hover: hover) {
         border-color: var(--color-primarygreen);
       }
     }
-  }
-  .hover\:underline {
-    &:hover {
-      @media (hover: hover) {
-        text-decoration-line: underline;
-      }
-    }
-  }
-  .sm\:text-lg {
-    @media (width >= 40rem) {
-      font-size: var(--text-lg);
-      line-height: var(--tw-leading, var(--text-lg--line-height));
-    }
-  }
-  .sm\:text-lg\/6 {
-    @media (width >= 40rem) {
-      font-size: var(--text-lg);
-      line-height: calc(var(--spacing) * 6);
-    }
-  }
-  .sm\:text-sm\/4 {
-    @media (width >= 40rem) {
-      font-size: var(--text-sm);
-      line-height: calc(var(--spacing) * 4);
-    }
-  }
-}
-@layer base {
-  code:not([class]) {
-    color: var(--color-primarygreen);
-    font-style: italic;
-  }
-  a {
-    color: var(--color-primarygreen);
-    text-decoration-line: none;
-    &:hover {
-      @media (hover: hover) {
-        text-decoration-line: underline;
-      }
-    }
-  }
-  ul {
-    margin-left: calc(var(--spacing) * 0);
-    list-style-position: inside;
-    list-style-type: disc;
-    padding-left: calc(var(--spacing) * 5);
   }
 }
 @property --tw-divide-x-reverse {
@@ -471,17 +325,11 @@
   inherits: false;
   initial-value: solid;
 }
-@property --tw-outline-style {
-  syntax: "*";
-  inherits: false;
-  initial-value: solid;
-}
 @layer properties {
   @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
     *, ::before, ::after, ::backdrop {
       --tw-divide-x-reverse: 0;
       --tw-border-style: solid;
-      --tw-outline-style: solid;
     }
   }
 }

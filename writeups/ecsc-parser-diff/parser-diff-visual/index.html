@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>ECSC2025 Firewall Parser Differential Visualiser</title>
+		<link href="./main.css" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css?family=JetBrains Mono" rel="stylesheet">
+		<script src="./main.js" defer></script>
+	</head>
+	<body class="h-dvh bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABTElEQVRYha1WWw7DMAjLquYYk7b7H7GTtq9UbWpsQ8fXVh4xJIAfz9f7227IZ9tC3do71bfW2lINPuvW3lP+w2cHgIxHUKZzDhu2yGeZjVAwV6d8EEh4BSw7V6fKvwNwDN37jWId/edYS1TCCqhIfwQ2fg/96QrmDNwyIkDKd+hPAOYgKijKLCt0DszCAKIrUfodQGbgVL9FZywzuqjPWSsie2ULH6HjoCT7kOUbiAI4FWGgYRdkZr4z9ZyxTdsQyR0bmGC1f6PDUIWYXLogCuwcrvzCbej0NRoqTvXUY7XbkA0V9l9t0ss2ZM5uu6kkjnrKB1Bm1fUdAYOUjDlmyov+hwCyC+n4ndEyVTGLEyr9nf0B50C2zJE4I9rmA5XH57wdSEorWSvyETIiNgUjSlWlXxAAU0ZZVRYYpWRD/rWOM7xCEhInuDqM2fwAG58SrpqDi2sAAAAASUVORK5CYII=')] font-jetbrains">
+		<div class="bg-(--color-background-one) m-10 border-1 border-(--color-primarygreen) flex flex-col">
+			<h1 class="self-center mt-5 text-(--color-plaintext)">ECSC2025 Firewall Parser Differential Visualiser</h1>
+			<div class="m-10 flex flex-col">
+				<h2 class="text-(--color-primarygreen)">Input Byte String</h2>
+				<textarea type="text" id="inputByteString" oninput="updateVisualisers(this.value)" class="bg-(--color-background-two) p-3 border-1 border-(--color-grey-border) hover:border-(--color-primarygreen) text-(--color-plaintext)"></textarea>
+				<div class="flex flex-row w-full mt-1 gap-x-1">
+					<button class="w-full text-(--color-red) bg-(--color-background-two) border-1 border-(--color-grey-border)" onclick="setStandardInputExample()">Standard Input Example</button>
+					<button class="w-full text-(--color-red) bg-(--color-background-two) border-1 border-(--color-grey-border)" onclick="setExploitInputExample()">Exploit Input Example</button>
+				</div>
+			</div>
+			<div class="m-10 grid grid-cols-2 divide-x-4 divide-(--color-red) divide-dashed">
+				<div class="pr-10">
+					<h2 class="text-center text-(--color-primarygreen)">Standard ASN.1 BER</h2>
+					<div class="bg-(--color-background-two) place-content-start p-3 min-h-25 border-1 border-(--color-grey-border) flex flex-row flex-wrap gap-x-0 cursor-default text-(--color-pink)" onmouseout="unhighlightBytes(this)" id="StandardParser">
+					</div>
+					<p class="mt-2 text-(--color-plaintext)">
+						This is a simple ASN.1 BER parser based on the following resources:
+						<br>• <a class="text-(--color-link)" href="https://luca.ntop.org/Teaching/Appunti/asn1.html">https://luca.ntop.org/Teaching/Appunti/asn1.html</a>
+						<br>• <a class="text-(--color-link)" href="https://www.oss.com/asn1/resources/asn1-made-simple/asn1-quick-reference/basic-encoding-rules.html">https://www.oss.com/asn1/resources/asn1-made-simple/asn1-quick-reference/basic-encoding-rules.html</a>
+						<br>
+						Most importantly, this parser implements high-form tags, long-form lengths, and indefinite lengths, which were missing from the parser in the "Firewall" challenge.
+					</p>
+				</div>
+				<div class="pl-10">
+					<h2 class="text-center text-(--color-primarygreen)">Firewall Parser</h2>
+					<div class="bg-(--color-background-two) place-content-start p-3 min-h-25 border-1 border-(--color-grey-border) flex flex-row flex-wrap gap-x-0 cursor-default text-(--color-pink)" onmouseout="unhighlightBytes(this)" id="FirewallParser">
+					</div>
+					<p class="mt-2 text-(--color-plaintext)">
+						This is a rough recreation of the parser that the "Firewall" challenge used for retrieving the PDU type of an SNMP packet. <br><br> It only reads one byte when retrieving a tag or length, meaning it does not consider multi-byte structures (high-form tags, long-form lengths, or indefinite lengths). This is the differential that could be used to bypass the PDU type filter.
+					</p>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
