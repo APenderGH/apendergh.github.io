@@ -11,14 +11,13 @@
     --text-sm: 0.875rem;
     --text-lg: 1.125rem;
     --text-lg--line-height: calc(1.75 / 1.125);
-    --font-weight-bold: 700;
     --default-font-family: var(--font-sans);
     --default-mono-font-family: var(--font-mono);
     --font-jetbrains: "JetBrains Mono";
     --color-primarygreen: #B8BB26;
     --color-plaintext: #D3C4A1;
     --color-background-one: #1D2021;
-    --text-custom-dynamic: clamp(0.2rem, calc(1.5vw), 1rem);
+    --text-custom-dynamic: clamp(0.4rem, calc(1.5vw), 1rem);
     --text-ascii-art: calc(0.8vw + 0.8vw);
     --text-ascii-art--line-height: calc(0.8vw + 0.8vw);
   }
@@ -248,10 +247,6 @@
   .text-custom-dynamic {
     font-size: var(--text-custom-dynamic);
   }
-  .font-bold {
-    --tw-font-weight: var(--font-weight-bold);
-    font-weight: var(--font-weight-bold);
-  }
   .text-\(--color-plaintext\) {
     color: var(--color-plaintext);
   }
@@ -316,15 +311,10 @@
   inherits: false;
   initial-value: solid;
 }
-@property --tw-font-weight {
-  syntax: "*";
-  inherits: false;
-}
 @layer properties {
   @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
     *, ::before, ::after, ::backdrop {
       --tw-border-style: solid;
-      --tw-font-weight: initial;
     }
   }
 }
