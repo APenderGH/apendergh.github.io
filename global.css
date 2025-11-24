@@ -17,7 +17,7 @@
     --color-primarygreen: #B8BB26;
     --color-plaintext: #D3C4A1;
     --color-background-one: #1D2021;
-    --text-custom-dynamic: clamp(0.4rem, calc(1.5vw), 1rem);
+    --text-custom-dynamic: clamp(0.6rem, calc(1.5vw), 1rem);
     --text-ascii-art: calc(0.8vw + 0.8vw);
     --text-ascii-art--line-height: calc(0.8vw + 0.8vw);
   }
