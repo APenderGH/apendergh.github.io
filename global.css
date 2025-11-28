@@ -182,6 +182,9 @@
   .m-10 {
     margin: calc(var(--spacing) * 10);
   }
+  .m-auto {
+    margin: auto;
+  }
   .my-20 {
     margin-block: calc(var(--spacing) * 20);
   }
@@ -287,6 +290,9 @@
     :where(& > :not(:last-child)) {
       border-color: var(--color-red);
     }
+  }
+  .place-self-center {
+    place-self: center;
   }
   .self-center {
     align-self: center;
