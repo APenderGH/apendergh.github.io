@@ -188,15 +188,15 @@ app<span class="token punctuation">.</span><span class="token function">get</spa
     name<span class="token punctuation">,</span>
     <span class="token literal-property property">balance</span><span class="token operator">:</span> <span class="token number">10</span><span class="token punctuation">,</span>
   <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
-<p>However, having two requests pass the <code>names.has(name)</code> check before hitting the <code>names.add(name)</code> appears to be very difficult, which makes sense. I tried a few things like registering thousands of users to slow down the <code>.add / .has</code> calls, but none worked. After giving up on that idea, I had the thought to check what the max length of strings was in MySQL. If there was a feasible max length, then I'd want to check what the behaviour was at that boundary, e.g. if MySQL would truncate a username that was submitted.</p>
+<p>However, having two requests pass the <code>names.has(name)</code> check before hitting the <code>names.add(name)</code> appears to be very difficult, which makes sense. I tried a few things like registering thousands of users to slow down the <code>.add</code> / <code>.has</code> calls, but none worked. After giving up on that idea, I had the thought to check what the max length of strings was in MySQL. If there was a feasible max length, then I'd want to check what the behaviour was at that boundary, e.g. if MySQL would truncate a username that was submitted.</p>
 <p>Looking at <code>db.js</code>, we can see the SQL query used to set up the users table.</p>
-<pre class="language-SQL"><code class="language-SQL">CREATE TABLE users (
-  id INT AUTO_INCREMENT NOT NULL,
-  name TEXT NOT NULL,
-  balance BIGINT NOT NULL,
-  PRIMARY KEY (id)
-)</code></pre>
-<p>Doing a quick check of the MySQL documentation we can find that the max length of a <code>TEXT</code> column (which is used for <code>name</code>) is <code>65535</code>. To test our idea, we can register a user with a name containing <code>65535</code> <code>a</code>'s, and then a user with a name containing <code>65536</code> <code>a</code>s.</p>
+<pre class="language-sql"><code class="language-sql"><span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> users <span class="token punctuation">(</span>
+  id <span class="token keyword">INT</span> <span class="token keyword">AUTO_INCREMENT</span> <span class="token operator">NOT</span> <span class="token boolean">NULL</span><span class="token punctuation">,</span>
+  name <span class="token keyword">TEXT</span> <span class="token operator">NOT</span> <span class="token boolean">NULL</span><span class="token punctuation">,</span>
+  balance <span class="token keyword">BIGINT</span> <span class="token operator">NOT</span> <span class="token boolean">NULL</span><span class="token punctuation">,</span>
+  <span class="token keyword">PRIMARY</span> <span class="token keyword">KEY</span> <span class="token punctuation">(</span>id<span class="token punctuation">)</span>
+<span class="token punctuation">)</span></code></pre>
+<p>Doing a quick check of the MySQL documentation we can find that the max length of a <code>TEXT</code> column (which is used for <code>name</code>) is <code>65535</code>. To test our idea, we can register a user with a name containing <code>65535</code> <code>a</code>'s, and then a user with a name containing <code>65536</code> <code>a</code>'s.</p>
 <h4>Request</h4>
 <pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">POST</span> <span class="token request-target url">/api/register</span> <span class="token http-version property">HTTP/1.1</span></span>
 <span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">localhost:3000</span></span>
