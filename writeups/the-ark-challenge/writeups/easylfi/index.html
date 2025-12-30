@@ -25,21 +25,21 @@
 
 <span class="token number">4</span> directories, <span class="token number">7</span> files</code></pre>
 <p>Looking at the <code>Dockerfile</code>, we see the flag is at <code>/flag.txt</code>.</p>
-<pre class="language-Dockerfile"><code class="language-Dockerfile">FROM python:3.10.8-bullseye
+<pre class="language-docker"><code class="language-docker"><span class="token instruction"><span class="token keyword">FROM</span> python:3.10.8-bullseye</span>
 
-WORKDIR /app
+<span class="token instruction"><span class="token keyword">WORKDIR</span> /app</span>
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+<span class="token instruction"><span class="token keyword">COPY</span> requirements.txt .</span>
+<span class="token instruction"><span class="token keyword">RUN</span> pip install -r requirements.txt</span>
 
-COPY flag.txt /
+<span class="token instruction"><span class="token keyword">COPY</span> flag.txt /</span>
 
-COPY public public
-COPY app.py .
+<span class="token instruction"><span class="token keyword">COPY</span> public public</span>
+<span class="token instruction"><span class="token keyword">COPY</span> app.py .</span>
 
-USER 404:404
+<span class="token instruction"><span class="token keyword">USER</span> 404:404</span>
 
-CMD ["flask", "run", "--host=0.0.0.0", "--port=3000"]</code></pre>
+<span class="token instruction"><span class="token keyword">CMD</span> [<span class="token string">"flask"</span>, <span class="token string">"run"</span>, <span class="token string">"--host=0.0.0.0"</span>, <span class="token string">"--port=3000"</span>]</span></code></pre>
 <p>The <code>app.py</code> file is where the core of the challenge lives.</p>
 <pre class="language-python"><code class="language-python"><span class="token keyword">from</span> flask <span class="token keyword">import</span> Flask<span class="token punctuation">,</span> request<span class="token punctuation">,</span> Response
 <span class="token keyword">import</span> subprocess

