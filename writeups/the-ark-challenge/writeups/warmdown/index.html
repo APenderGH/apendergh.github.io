@@ -169,6 +169,14 @@ app<span class="token punctuation">.</span><span class="token function">get</spa
 			margin: 0.5em 0;
 			overflow: auto;
 		}
+		
+		/* APENDER: add wrap */
+		code[class*="language-"] {
+			@media (width > 40rem) {
+				text-wrap-mode: wrap;
+				overflow-wrap: anywhere;
+			}
+		}
 
 		:not(pre) > code[class*="language-"],
 		pre[class*="language-"] {

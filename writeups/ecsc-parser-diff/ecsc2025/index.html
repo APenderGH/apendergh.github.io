@@ -16,7 +16,7 @@
 <p>The challenge I spent most of my time on during the Attack/Defense CTF was called &quot;Firewall&quot;. It was a pretty large application with a lot of interesting functionality, including its own VPN, an FTP service, and a web interface that enabled SNMP interactions. Almost all my work on this challenge focused on the SNMP interactions, but I didn't manage to find the primary bug in it myself. Instead, a teammate and I worked on replicating an exploit that another team was attacking us with.</p>
 <p>Long story short, the bug was difficult for us to replicate based on the traffic we had, and by the time we figured it out, it was far too late in the competition to do anything with it. I'm not going to go into detail on the challenge or the solutions here, but the core bug in the SNMP functionality was a parser differential that allowed you to make SNMP requests that were supposed to be disallowed.</p>
 <p>To make up for missing this bug, and to hopefully make it more intuitive to spot something like this in the future, I implemented a basic ASN.1 parser and reimplemented the vulnerable parser from the challenge. Using these implementations I created a visualisation of the parser differential, which is iframed below (its also directly accessible <a href="/writeups/ecsc-parser-diff/parser-diff-visual/">here</a>). Click the &quot;Standard Input Example&quot; and &quot;Exploit Input Example&quot; buttons to compare payloads. Once a payload is visualised, you can hover over the bytes to highlight ASN.1 objects.</p>
-<iframe class="w-[90vw] h-[90vh]" src="/writeups/ecsc-parser-diff/parser-diff-visual/"></iframe>
+<iframe class="w-full h-[90vh]" src="/writeups/ecsc-parser-diff/parser-diff-visual/"></iframe>
 
 		</div>
 	</div>
@@ -76,6 +76,14 @@
 			padding: 1em;
 			margin: 0.5em 0;
 			overflow: auto;
+		}
+		
+		/* APENDER: add wrap */
+		code[class*="language-"] {
+			@media (width > 40rem) {
+				text-wrap-mode: wrap;
+				overflow-wrap: anywhere;
+			}
 		}
 
 		:not(pre) > code[class*="language-"],

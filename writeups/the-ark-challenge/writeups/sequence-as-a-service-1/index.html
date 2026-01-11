@@ -143,6 +143,14 @@ SECCON{Fr4cTaL_seq_1s_G00D:1,1,2,1,3,2,4,1,5,3,6,2,7,4,8,1}
 			margin: 0.5em 0;
 			overflow: auto;
 		}
+		
+		/* APENDER: add wrap */
+		code[class*="language-"] {
+			@media (width > 40rem) {
+				text-wrap-mode: wrap;
+				overflow-wrap: anywhere;
+			}
+		}
 
 		:not(pre) > code[class*="language-"],
 		pre[class*="language-"] {
