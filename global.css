@@ -490,8 +490,8 @@
     border-width: 1px;
     border-color: var(--color-primarygreen);
     background-color: var(--color-background-two);
+    padding-inline: calc(var(--spacing) * 2);
     padding-block: calc(var(--spacing) * 2);
-    padding-left: calc(var(--spacing) * 2);
     @media (width >= 80rem) {
       width: calc(2/3 * 100%);
     }
