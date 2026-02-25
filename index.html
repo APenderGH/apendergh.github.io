@@ -1,14 +1,18 @@
 
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link href='https://fonts.googleapis.com/css?family=JetBrains Mono' rel='stylesheet'>
-	<link href='/global.css' rel='stylesheet'>
-	<title></title>
-  </head>
-  <body class="bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABTElEQVRYha1WWw7DMAjLquYYk7b7H7GTtq9UbWpsQ8fXVh4xJIAfz9f7227IZ9tC3do71bfW2lINPuvW3lP+w2cHgIxHUKZzDhu2yGeZjVAwV6d8EEh4BSw7V6fKvwNwDN37jWId/edYS1TCCqhIfwQ2fg/96QrmDNwyIkDKd+hPAOYgKijKLCt0DszCAKIrUfodQGbgVL9FZywzuqjPWSsie2ULH6HjoCT7kOUbiAI4FWGgYRdkZr4z9ZyxTdsQyR0bmGC1f6PDUIWYXLogCuwcrvzCbej0NRoqTvXUY7XbkA0V9l9t0ss2ZM5uu6kkjnrKB1Bm1fUdAYOUjDlmyov+hwCyC+n4ndEyVTGLEyr9nf0B50C2zJE4I9rmA5XH57wdSEorWSvyETIiNgUjSlWlXxAAU0ZZVRYYpWRD/rWOM7xCEhInuDqM2fwAG58SrpqDi2sAAAAASUVORK5CYII=')] flex flex-col place-items-center min-h-dvh">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link href='https://fonts.googleapis.com/css?family=JetBrains Mono' rel='stylesheet'>
+		<link href='/global.css' rel='stylesheet'>
+		<script src="/js/bug.js" defer></script>
+		<title></title>
+	</head>
+	<body class="bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABTElEQVRYha1WWw7DMAjLquYYk7b7H7GTtq9UbWpsQ8fXVh4xJIAfz9f7227IZ9tC3do71bfW2lINPuvW3lP+w2cHgIxHUKZzDhu2yGeZjVAwV6d8EEh4BSw7V6fKvwNwDN37jWId/edYS1TCCqhIfwQ2fg/96QrmDNwyIkDKd+hPAOYgKijKLCt0DszCAKIrUfodQGbgVL9FZywzuqjPWSsie2ULH6HjoCT7kOUbiAI4FWGgYRdkZr4z9ZyxTdsQyR0bmGC1f6PDUIWYXLogCuwcrvzCbej0NRoqTvXUY7XbkA0V9l9t0ss2ZM5uu6kkjnrKB1Bm1fUdAYOUjDlmyov+hwCyC+n4ndEyVTGLEyr9nf0B50C2zJE4I9rmA5XH57wdSEorWSvyETIiNgUjSlWlXxAAU0ZZVRYYpWRD/rWOM7xCEhInuDqM2fwAG58SrpqDi2sAAAAASUVORK5CYII=')] flex flex-col place-items-center min-h-dvh">
+	<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAd0lEQVQ4T2OUVVD8z0ABYMRnwJ/fvxlYWFmxGg+TgxtAjGJsJmF1ASmG4fUCzEZ8BjJKSsv8x+VPfGGLEQbkRgSKF9Cdis/pMAuJCgNcYQGygCQDcEYjKdEGMgRZPYYLcBmGS5w6XiAmvtHVYE0HxEQbuhqKvQAAOc9U09nxxTIAAAAASUVORK5CYII=" id="lightcell">
+	<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAgElEQVQ4T6WT6wqAIAyFHeRDRAX1/o9oYBgs5nQ38qdz3zm7COu21yScJed0lyKF33tAgOcxJ7WcD6DJIHwmAsd51ZlNr6POgTeJug2V0BK5iAiw3GD81xS6MarDVoKqA1qGVJKriZq7AcCVJOWhidEedABLJVSC50+Ym2gtEQU8D3taD9qY+zkAAAAASUVORK5CYII=" id="darkcell">
+	<canvas id="background"></canvas>
 	<div class="bg-(--color-background-one) box-border my-20 border-1 border-(--color-primarygreen) flex flex-col py-8 px-5 font-jetbrains max-w-screen">
 		<div class="">
 			<pre class="text-(--color-primarygreen) text-ascii-art sm:text-sm/4">
@@ -27,5 +31,21 @@
 			<ul class="list-disc list-inside sm:text-lg/6"><li><a href="/writeups/the-ark-challenge/" class="hover:underline">The Ark Challenge</a></li><li><a href="/writeups/ecsc-parser-diff/ecsc2025/" class="hover:underline">ECSC 2025 - Firewall</a></li><li><a href="/writeups/dogblog-bsidescbr/" class="hover:underline">BSides Canberra 2025 - Dog Blog (5 Solves)</a></li><li><a href="/writeups/gomail-ductf/" class="hover:underline">DUCTF 2025 - gomail (137 Solves)</a></li><li><a href="/writeups/tamuctf2023-bank/" class="hover:underline">TAMUctf 2023 - Bank</a></li></ul>
 		</div>
 	</div>
+	<style>
+		html, body {
+			margin: 0;
+			padding: 0;
+		}
+
+		#lightcell, #darkcell {
+			display: none;
+		}
+
+		canvas {
+			display: block;
+			position: absolute;
+			z-index: -1;
+		}	
+	</style>
   </body>
 </html>
