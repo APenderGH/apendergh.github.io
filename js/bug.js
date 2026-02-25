@@ -41,9 +41,9 @@ class Grid {
 		this.#ctx = this.#canvas.getContext("2d");
 		this.#bugs = [];
 		this.#cells = [];
-		for (var x = 0; x < this.#width; x++) {
+		for (var x = 0; x <= this.#width; x++) {
 			this.#cells[x] = [];
-			for (var y = 0; y < this.#height; y++) {
+			for (var y = 0; y <= this.#height; y++) {
 				this.#cells[x][y] = 0; // had an idea here to make it a grid of numbers that we can just decrement from each tick. This way we might have a bit of an easier time dealing with fades. (we could even optionally render these numbers for the visualisation).
 			}
 		}
@@ -121,8 +121,8 @@ class Grid {
 			}
 
 			// Draw any cells that aren't 0
-			for (var x = 0; x < this.#width; x++) {
-				for (var y = 0; y < this.#height; y++) {
+			for (var x = 0; x <= this.#width; x++) {
+				for (var y = 0; y <= this.#height; y++) {
 					if (this.#cells[x][y] != 0) {
 						switch (this.#renderMode) {
 							case RENDER_MODES.NUMBER:
@@ -145,8 +145,8 @@ class Grid {
 		}, 1000/TICK_RATE);
 
 		this.#decrementIntervalID = setInterval(() => {
-			for (var x = 0; x < this.#width; x++) {
-				for (var y = 0; y < this.#height; y++) {
+			for (var x = 0; x <= this.#width; x++) {
+				for (var y = 0; y <= this.#height; y++) {
 					if (this.#cells[x][y] != 0) {
 						this.decrementCell(x, y);
 						if (this.#cells[x][y] == 0) {
@@ -166,9 +166,9 @@ class Grid {
 		this.#height = this.#canvas.height / this.#cellWidth;
 		this.#bugs = [];
 		this.#cells = [];
-		for (var x = 0; x < this.#width; x++) {
+		for (var x = 0; x <= this.#width; x++) {
 			this.#cells[x] = [];
-			for (var y = 0; y < this.#height; y++) {
+			for (var y = 0; y <= this.#height; y++) {
 				this.#cells[x][y] = 0; // had an idea here to make it a grid of numbers that we can just decrement from each tick. This way we might have a bit of an easier time dealing with fades. (we could even optionally render these numbers for the visualisation).
 			}
 		}
