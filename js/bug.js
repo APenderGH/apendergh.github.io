@@ -36,11 +36,9 @@ class Grid {
 		this.#cellWidth = 16;
 		this.#decrementRate = 2;
 		this.#canvas = canvas;
-		this.#width = this.#canvas.width / this.#cellWidth;
-		this.#height = this.#canvas.height / this.#cellWidth;
 
 		// high DPI support - https://web.dev/articles/canvas-hidipi
-		var dpr = window.devicePixelRatio || 1;
+		var dpr = window.devicePixelRatio;
 		var initialWidth = this.#canvas.width;
 		var initialHeight = this.#canvas.height;
 		this.#canvas.width = initialWidth * dpr;
@@ -49,6 +47,9 @@ class Grid {
 		this.#canvas.style.height = initialHeight + "px";
 		this.#ctx = this.#canvas.getContext("2d");
 		this.#ctx.scale(dpr, dpr);
+
+		this.#width = parseInt(this.#canvas.style.width) / this.#cellWidth;
+		this.#height = parseInt(this.#canvas.style.height) / this.#cellWidth;
 
 		this.#bugs = [];
 		this.#cells = [];
@@ -175,7 +176,7 @@ class Grid {
 		this.#ctx.clearRect(0, 0, this.#canvas.width, this.#canvas.height);
 		
 		// high DPI support - https://web.dev/articles/canvas-hidipi
-		var dpr = window.devicePixelRatio || 1;
+		var dpr = window.devicePixelRatio;
 		var initialWidth = this.#canvas.width;
 		var initialHeight = this.#canvas.height;
 		this.#canvas.width = initialWidth * dpr;
@@ -185,8 +186,8 @@ class Grid {
 		this.#ctx = this.#canvas.getContext("2d");
 		this.#ctx.scale(dpr, dpr);
 
-		this.#width = this.#canvas.width / this.#cellWidth;
-		this.#height = this.#canvas.height / this.#cellWidth;
+		this.#width = parseInt(this.#canvas.style.width) / this.#cellWidth;
+		this.#height = parseInt(this.#canvas.style.height) / this.#cellWidth;
 
 		this.#bugs = [];
 		this.#cells = [];
@@ -256,10 +257,12 @@ function main() {
 	canvas.height = window.innerHeight;
 	var grid = new Grid(RENDER_MODES.NUMBER_AND_RECT, canvas);
 	var addBugsID = setInterval(() => {
-		grid.addBug(
-			Math.round(Math.random()) * Math.floor(grid.width), 
-			Math.round(Math.random() * Math.floor(grid.height))
-		);
+		if (!document.hidden) { // The canvas doesn't update while the tab is backgrounded, so we need to stop adding bugs.
+			grid.addBug(
+				Math.round(Math.random()) * Math.floor(grid.width), 
+				Math.round(Math.random() * Math.floor(grid.height))
+			);
+		}
 	}, 3000);
 	grid.start();
 
