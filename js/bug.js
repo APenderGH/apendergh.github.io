@@ -263,7 +263,7 @@ function main() {
 				Math.round(Math.random() * Math.floor(grid.height))
 			);
 		}
-	}, 500);
+	}, 3000);
 	grid.start();
 
 	window.addEventListener("resize", () => {
