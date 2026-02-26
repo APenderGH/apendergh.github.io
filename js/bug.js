@@ -38,7 +38,7 @@ class Grid {
 		this.#canvas = canvas;
 
 		// high DPI support - https://web.dev/articles/canvas-hidipi
-		var dpr = window.devicePixelRatio;
+		var dpr = Math.max(1, Math.round(window.devicePixelRatio)); // we round here because floating point scale does not play nice in this scenario
 		var initialWidth = this.#canvas.width;
 		var initialHeight = this.#canvas.height;
 		this.#canvas.width = initialWidth * dpr;
@@ -176,7 +176,7 @@ class Grid {
 		this.#ctx.clearRect(0, 0, this.#canvas.width, this.#canvas.height);
 		
 		// high DPI support - https://web.dev/articles/canvas-hidipi
-		var dpr = window.devicePixelRatio;
+		var dpr = Math.max(1, Math.round(window.devicePixelRatio));
 		var initialWidth = this.#canvas.width;
 		var initialHeight = this.#canvas.height;
 		this.#canvas.width = initialWidth * dpr;
@@ -263,7 +263,7 @@ function main() {
 				Math.round(Math.random() * Math.floor(grid.height))
 			);
 		}
-	}, 3000);
+	}, 500);
 	grid.start();
 
 	window.addEventListener("resize", () => {
