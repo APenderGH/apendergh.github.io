@@ -32,13 +32,24 @@ class Grid {
 	#decrementRate;
 	#renderMode;
 
-	constructor(width, height, renderMode, canvas) {
+	constructor(renderMode, canvas) {
 		this.#cellWidth = 16;
 		this.#decrementRate = 2;
-		this.#width = width / this.#cellWidth;
-		this.#height = height / this.#cellWidth;
 		this.#canvas = canvas;
+		this.#width = this.#canvas.width / this.#cellWidth;
+		this.#height = this.#canvas.height / this.#cellWidth;
+
+		// high DPI support - https://web.dev/articles/canvas-hidipi
+		var dpr = window.devicePixelRatio || 1;
+		var initialWidth = this.#canvas.width;
+		var initialHeight = this.#canvas.height;
+		this.#canvas.width = initialWidth * dpr;
+		this.#canvas.height = initialHeight * dpr;
+		this.#canvas.style.width = initialWidth + "px";
+		this.#canvas.style.height = initialHeight + "px";
 		this.#ctx = this.#canvas.getContext("2d");
+		this.#ctx.scale(dpr, dpr);
+
 		this.#bugs = [];
 		this.#cells = [];
 		for (var x = 0; x <= this.#width; x++) {
@@ -162,14 +173,27 @@ class Grid {
 		clearInterval(this.#renderIntervalID);
 		clearInterval(this.#decrementIntervalID);
 		this.#ctx.clearRect(0, 0, this.#canvas.width, this.#canvas.height);
+		
+		// high DPI support - https://web.dev/articles/canvas-hidipi
+		var dpr = window.devicePixelRatio || 1;
+		var initialWidth = this.#canvas.width;
+		var initialHeight = this.#canvas.height;
+		this.#canvas.width = initialWidth * dpr;
+		this.#canvas.height = initialHeight * dpr;
+		this.#canvas.style.width = initialWidth + "px";
+		this.#canvas.style.height = initialHeight + "px";
+		this.#ctx = this.#canvas.getContext("2d");
+		this.#ctx.scale(dpr, dpr);
+
 		this.#width = this.#canvas.width / this.#cellWidth;
 		this.#height = this.#canvas.height / this.#cellWidth;
+
 		this.#bugs = [];
 		this.#cells = [];
 		for (var x = 0; x <= this.#width; x++) {
 			this.#cells[x] = [];
 			for (var y = 0; y <= this.#height; y++) {
-				this.#cells[x][y] = 0; // had an idea here to make it a grid of numbers that we can just decrement from each tick. This way we might have a bit of an easier time dealing with fades. (we could even optionally render these numbers for the visualisation).
+				this.#cells[x][y] = 0; 
 			}
 		}
 		this.start();
@@ -230,7 +254,7 @@ function main() {
 	const canvas = document.getElementById("background");
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
-	var grid = new Grid(canvas.width, canvas.height, RENDER_MODES.NUMBER_AND_RECT, canvas);
+	var grid = new Grid(RENDER_MODES.NUMBER_AND_RECT, canvas);
 	var addBugsID = setInterval(() => {
 		grid.addBug(
 			Math.round(Math.random()) * Math.floor(grid.width), 
