@@ -9,6 +9,88 @@
 	<title>skipinx</title>
   </head>
   <body class="bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABTElEQVRYha1WWw7DMAjLquYYk7b7H7GTtq9UbWpsQ8fXVh4xJIAfz9f7227IZ9tC3do71bfW2lINPuvW3lP+w2cHgIxHUKZzDhu2yGeZjVAwV6d8EEh4BSw7V6fKvwNwDN37jWId/edYS1TCCqhIfwQ2fg/96QrmDNwyIkDKd+hPAOYgKijKLCt0DszCAKIrUfodQGbgVL9FZywzuqjPWSsie2ULH6HjoCT7kOUbiAI4FWGgYRdkZr4z9ZyxTdsQyR0bmGC1f6PDUIWYXLogCuwcrvzCbej0NRoqTvXUY7XbkA0V9l9t0ss2ZM5uu6kkjnrKB1Bm1fUdAYOUjDlmyov+hwCyC+n4ndEyVTGLEyr9nf0B50C2zJE4I9rmA5XH57wdSEorWSvyETIiNgUjSlWlXxAAU0ZZVRYYpWRD/rWOM7xCEhInuDqM2fwAG58SrpqDi2sAAAAASUVORK5CYII=')] flex flex-col place-items-center min-h-dvh">
+	<div class="flex flex-nowrap flex-row justify-between bg-(--color-background-one) text-(--color-plaintext) font-jetbrains border-b-2 border-(--color-grey-border) w-screen pt-1 sm:text-m cursor-default" id="navbar">
+	<div class="flex flex-row ml-2" id="tabs">
+		<div class="px-4 hover:border-(--color-plaintext) border-(--color-background-one) border-b-2" id="main-tab">
+			Main Page
+		</div>
+		<div class="px-4 hover:border-(--color-plaintext) border-(--color-background-one) border-b-2" id="canvas-tab">
+			Canvas Stuff
+		</div>
+		<div class="px-4 hover:border-(--color-plaintext) border-(--color-background-one) border-b-2" id="about-tab">
+			About
+		</div>
+	</div>
+	<div class="flex-row mr-4 hidden xl:flex" id="status">
+		<div class="px-7"><span class="text-(--color-primarygreen)">/ </span><span id="storage">51</span>%</div>
+		<div class="px-7"><span class="text-(--color-primarygreen)">RAM </span><span id="ram">56</span>%</div>
+		<div class="px-7"><span class="text-(--color-primarygreen)">CPU </span><span id="cpu">27</span>%</div>
+		<div class="px-7"><span class="text-(--color-primarygreen)">eth0 </span><span id="eth">192.168.48.137</span></div>
+		<div class="pl-7"><span class="text-(--color-primarygreen)"><span id="time">19:53</span></span></div>
+	</div>
+</div>
+<script defer>
+	var mainTab = document.getElementById("main-tab");
+	var canvasTab = document.getElementById("canvas-tab");
+	var aboutTab = document.getElementById("about-tab");
+
+	var storageEl = document.getElementById("storage");
+	var ramEl = document.getElementById("ram");
+	var cpuEl = document.getElementById("cpu");
+	var ethEl = document.getElementById("eth");
+	var timeEl = document.getElementById("time");
+
+	var currentLocation = window.location.pathname;
+	var tabSelectedStyle = "border-(--color-primarygreen)";
+	var tabHoveredStyle = "hover:border-(--color-plaintext)"
+	
+	// Handle navigation
+	mainTab.onclick = () => { window.location = "/" };
+	canvasTab.onclick = () => { window.location = "/canvas" };
+	aboutTab.onclick = () => { window.location = "/about" };
+
+	// Handle current tab highlight
+	switch (currentLocation.split("/")[1]) {
+		case "":
+			mainTab.classList.add(tabSelectedStyle);
+			mainTab.classList.remove(tabHoveredStyle);
+			break;
+		case "canvas":
+			canvasTab.classList.add(tabSelectedStyle);
+			canvasTab.classList.remove(tabHoveredStyle);
+			break;
+		case "about":
+			aboutTab.classList.add(tabSelectedStyle);
+			aboutTab.classList.remove(tabHoveredStyle);
+			break;
+	}
+
+	// Handle stat updates
+	var storage = 51;
+	var ram = 56;
+	var cpu = 27;
+
+	var options = {
+		hour: "numeric",
+		minute: "numeric",
+		hour12: false
+	}
+
+	var time = new Intl.DateTimeFormat(undefined, options).format(new Date);
+	timeEl.textContent = time;
+	setInterval(() => {
+		time = new Intl.DateTimeFormat(undefined, options).format(new Date);
+		timeEl.textContent = time;
+		var shouldUpdate = Math.round(Math.random()) == 1;
+		if (shouldUpdate) {
+			ramEl.textContent = Math.min(100, Number(ramEl.textContent) + Math.round(Math.random())*Math.round(Math.random()*5) * (Math.round(Math.random()) ? -1 : 1));
+			cpuEl.textContent = Math.min(100, Number(cpuEl.textContent) + Math.round(Math.random())*Math.round(Math.random()*5) * (Math.round(Math.random()) ? -1 : 1));
+		}
+	}, 2000)
+
+</script>
+
+
 	<div class="bg-(--color-background-one) box-border my-20 border-1 border-(--color-primarygreen) flex flex-col px-5 pb-5 overflow-x-auto font-jetbrains text-lg max-w-95/100 sm:max-w-70/100">
 		<div class="text-custom-dynamic text-(--color-plaintext)">
 			<h1>The Ark Challenge - skipinx</h1>

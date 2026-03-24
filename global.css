@@ -203,8 +203,14 @@
   .mt-5 {
     margin-top: calc(var(--spacing) * 5);
   }
+  .mr-4 {
+    margin-right: calc(var(--spacing) * 4);
+  }
   .mb-\[1\.5vh\] {
     margin-bottom: 1.5vh;
+  }
+  .ml-2 {
+    margin-left: calc(var(--spacing) * 2);
   }
   .box-border {
     box-sizing: border-box;
@@ -214,6 +220,9 @@
   }
   .grid {
     display: grid;
+  }
+  .hidden {
+    display: none;
   }
   .inline-block {
     display: inline-block;
@@ -235,6 +244,9 @@
   }
   .w-full {
     width: 100%;
+  }
+  .w-screen {
+    width: 100vw;
   }
   .max-w-95\/100 {
     max-width: calc(95/100 * 100%);
@@ -263,6 +275,9 @@
   .flex-row {
     flex-direction: row;
   }
+  .flex-nowrap {
+    flex-wrap: nowrap;
+  }
   .flex-wrap {
     flex-wrap: wrap;
   }
@@ -271,6 +286,9 @@
   }
   .place-items-center {
     place-items: center;
+  }
+  .justify-between {
+    justify-content: space-between;
   }
   .gap-x-0 {
     column-gap: calc(var(--spacing) * 0);
@@ -316,6 +334,13 @@
     border-style: var(--tw-border-style);
     border-width: 1px;
   }
+  .border-b-2 {
+    border-bottom-style: var(--tw-border-style);
+    border-bottom-width: 2px;
+  }
+  .border-\(--color-background-one\) {
+    border-color: var(--color-background-one);
+  }
   .border-\(--color-grey-border\) {
     border-color: var(--color-grey-border);
   }
@@ -340,17 +365,29 @@
   .px-1 {
     padding-inline: calc(var(--spacing) * 1);
   }
+  .px-4 {
+    padding-inline: calc(var(--spacing) * 4);
+  }
   .px-5 {
     padding-inline: calc(var(--spacing) * 5);
   }
+  .px-7 {
+    padding-inline: calc(var(--spacing) * 7);
+  }
   .py-8 {
     padding-block: calc(var(--spacing) * 8);
+  }
+  .pt-1 {
+    padding-top: calc(var(--spacing) * 1);
   }
   .pr-10 {
     padding-right: calc(var(--spacing) * 10);
   }
   .pb-5 {
     padding-bottom: calc(var(--spacing) * 5);
+  }
+  .pl-7 {
+    padding-left: calc(var(--spacing) * 7);
   }
   .pl-10 {
     padding-left: calc(var(--spacing) * 10);
@@ -402,6 +439,13 @@
   .filter {
     filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
   }
+  .hover\:border-\(--color-plaintext\) {
+    &:hover {
+      @media (hover: hover) {
+        border-color: var(--color-plaintext);
+      }
+    }
+  }
   .hover\:border-\(--color-primarygreen\) {
     &:hover {
       @media (hover: hover) {
@@ -442,6 +486,11 @@
     @media (width >= 40rem) {
       font-size: var(--text-sm);
       line-height: calc(var(--spacing) * 4);
+    }
+  }
+  .xl\:flex {
+    @media (width >= 80rem) {
+      display: flex;
     }
   }
 }
@@ -498,6 +547,15 @@
     @media (width >= 80rem) {
       width: calc(2/3 * 100%);
     }
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+  canvas {
+    display: block;
+    position: absolute;
+    z-index: -1;
   }
 }
 @property --tw-divide-x-reverse {
