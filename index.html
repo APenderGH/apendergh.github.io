@@ -84,8 +84,8 @@
 		timeEl.textContent = time;
 		var shouldUpdate = Math.round(Math.random()) == 1;
 		if (shouldUpdate) {
-			ramEl.textContent = Math.min(100, Number(ramEl.textContent) + Math.round(Math.random())*Math.round(Math.random()*5) * (Math.round(Math.random()) ? -1 : 1));
-			cpuEl.textContent = Math.min(100, Number(cpuEl.textContent) + Math.round(Math.random())*Math.round(Math.random()*5) * (Math.round(Math.random()) ? -1 : 1));
+			ramEl.textContent = Math.min(100, Math.max(0, Number(ramEl.textContent) + Math.round(Math.random())*Math.round(Math.random()*5) * (Math.round(Math.random()) ? -1 : 1)));
+			cpuEl.textContent = Math.min(100, Math.max(0, Number(cpuEl.textContent) + Math.round(Math.random())*Math.round(Math.random()*5) * (Math.round(Math.random()) ? -1 : 1)));
 		}
 	}, 2000)
 
@@ -108,7 +108,7 @@
 		</div>
 		<div class="text-(--color-primarygreen) text-custom-dynamic sm:text-lg my-[2.5vh]">
 			<p class="mb-[1.5vh]">Anything and everything web.</p>
-			<ul class="list-disc list-inside sm:text-lg/6"><li><a href="/writeups/the-ark-challenge/" class="hover:underline">The Ark Challenge</a></li><li><a href="/writeups/ecsc-parser-diff/ecsc2025/" class="hover:underline">ECSC 2025 - Firewall</a></li><li><a href="/writeups/dogblog-bsidescbr/" class="hover:underline">BSides Canberra 2025 - Dog Blog (5 Solves)</a></li><li><a href="/writeups/gomail-ductf/" class="hover:underline">DUCTF 2025 - gomail (137 Solves)</a></li><li><a href="/writeups/tamuctf2023-bank/" class="hover:underline">TAMUctf 2023 - Bank</a></li></ul>
+			<ul class="list-disc list-inside sm:text-lg/6"><li><a href="/writeups/waybird-defconquals/" class="hover:underline">DEFCON Qualifiers 2026 - Waybird Machine (26 Solves)</a></li><li><a href="/writeups/the-ark-challenge/" class="hover:underline">The Ark Challenge</a></li><li><a href="/writeups/ecsc-parser-diff/ecsc2025/" class="hover:underline">ECSC 2025 - Firewall</a></li><li><a href="/writeups/dogblog-bsidescbr/" class="hover:underline">BSides Canberra 2025 - Dog Blog (5 Solves)</a></li><li><a href="/writeups/gomail-ductf/" class="hover:underline">DUCTF 2025 - gomail (137 Solves)</a></li><li><a href="/writeups/tamuctf2023-bank/" class="hover:underline">TAMUctf 2023 - Bank</a></li></ul>
 		</div>
 	</div>
 	<style>

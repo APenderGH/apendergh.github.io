@@ -83,8 +83,8 @@
 		timeEl.textContent = time;
 		var shouldUpdate = Math.round(Math.random()) == 1;
 		if (shouldUpdate) {
-			ramEl.textContent = Math.min(100, Number(ramEl.textContent) + Math.round(Math.random())*Math.round(Math.random()*5) * (Math.round(Math.random()) ? -1 : 1));
-			cpuEl.textContent = Math.min(100, Number(cpuEl.textContent) + Math.round(Math.random())*Math.round(Math.random()*5) * (Math.round(Math.random()) ? -1 : 1));
+			ramEl.textContent = Math.min(100, Math.max(0, Number(ramEl.textContent) + Math.round(Math.random())*Math.round(Math.random()*5) * (Math.round(Math.random()) ? -1 : 1)));
+			cpuEl.textContent = Math.min(100, Math.max(0, Number(cpuEl.textContent) + Math.round(Math.random())*Math.round(Math.random()*5) * (Math.round(Math.random()) ? -1 : 1)));
 		}
 	}, 2000)
 
